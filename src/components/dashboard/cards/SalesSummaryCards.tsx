@@ -1,0 +1,56 @@
+import { Col, Row } from 'antd';
+import {
+  DollarOutlined,
+  ShoppingCartOutlined,
+  WarningOutlined,
+  InboxOutlined,
+} from '@ant-design/icons';
+import { StatCard } from '@/components/common/cards/StatCard';
+import { useSalesMetrics } from '@/hooks/sales/useSalesMetrics';
+import { useFilteredProducts } from '@/hooks/inventory/useProducts';
+import { formatCurrency, formatNumber } from '@/utils/common/format';
+
+export const SalesSummaryCards = (): JSX.Element => {
+  const { summary, loading: salesLoading } = useSalesMetrics();
+  const { summary: inventory, loading: inventoryLoading } = useFilteredProducts();
+
+  return (
+    <Row gutter={[16, 16]}>
+      <Col xs={24} sm={12} xl={6}>
+        <StatCard
+          title="Revenue today"
+          value={formatCurrency(summary.todayRevenue)}
+          icon={<DollarOutlined />}
+          tone="success"
+          loading={salesLoading}
+        />
+      </Col>
+      <Col xs={24} sm={12} xl={6}>
+        <StatCard
+          title="Sales today"
+          value={formatNumber(summary.todayCount)}
+          icon={<ShoppingCartOutlined />}
+          loading={salesLoading}
+        />
+      </Col>
+      <Col xs={24} sm={12} xl={6}>
+        <StatCard
+          title="Revenue this month"
+          value={formatCurrency(summary.monthRevenue)}
+          icon={<DollarOutlined />}
+          loading={salesLoading}
+        />
+      </Col>
+      <Col xs={24} sm={12} xl={6}>
+        <StatCard
+          title="Needs restocking"
+          value={formatNumber(inventory.lowStockCount + inventory.outOfStockCount)}
+          icon={inventory.outOfStockCount > 0 ? <WarningOutlined /> : <InboxOutlined />}
+          tone={inventory.outOfStockCount > 0 ? 'danger' : 'warning'}
+          loading={inventoryLoading}
+          suffix={`/ ${formatNumber(inventory.totalProducts)}`}
+        />
+      </Col>
+    </Row>
+  );
+};
