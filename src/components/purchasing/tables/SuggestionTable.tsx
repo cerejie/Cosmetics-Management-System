@@ -8,7 +8,11 @@ import {
   TABLE_STICKY,
   tablePagination,
 } from '@/components/common/tables/tableDefaults';
-import type { OrderSuggestion, SuggestionPriority } from '@/utils/purchasing/orderSuggestions';
+import {
+  isOrderable,
+  type OrderSuggestion,
+  type SuggestionPriority,
+} from '@/utils/purchasing/orderSuggestions';
 
 const PRIORITY_BADGES: Readonly<
   Record<SuggestionPriority, { status: 'error' | 'warning' | 'success'; label: string }>
@@ -108,9 +112,14 @@ export const SuggestionTable = ({
       key: 'suggestedQuantity',
       align: 'right',
       sorter: (a, b) => a.suggestedQuantity - b.suggestedQuantity,
-      render: (suggestedQuantity: number) => (
-        <Typography.Text strong>{formatNumber(suggestedQuantity)}</Typography.Text>
-      ),
+      render: (suggestedQuantity: number) =>
+        suggestedQuantity > 0 ? (
+          <Typography.Text strong>{formatNumber(suggestedQuantity)}</Typography.Text>
+        ) : (
+          <Tooltip title="Stock already covers the expected demand">
+            <Typography.Text type="secondary">—</Typography.Text>
+          </Tooltip>
+        ),
     },
     {
       title: 'Supplier',
@@ -147,10 +156,17 @@ export const SuggestionTable = ({
               aria-label={`View trend for ${suggestion.productName}`}
             />
           </Tooltip>
-          <Tooltip title="Add to purchase">
+          <Tooltip
+            title={
+              isOrderable(suggestion)
+                ? 'Add to purchase'
+                : 'Nothing to order — stock covers the expected demand'
+            }
+          >
             <Button
               type="text"
               icon={<PlusOutlined />}
+              disabled={!isOrderable(suggestion)}
               onClick={() => onAddToPurchase(suggestion)}
               aria-label={`Add ${suggestion.productName} to a purchase`}
             />
@@ -176,8 +192,8 @@ export const SuggestionTable = ({
       locale={{
         emptyText: (
           <EmptyState
-            title="Nothing needs reordering"
-            description="Every active product has enough cover for the selected period."
+            title="No products to rank"
+            description="Add active products to your catalogue, then generate suggestions again."
           />
         ),
       }}

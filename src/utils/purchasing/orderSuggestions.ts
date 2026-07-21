@@ -165,7 +165,11 @@ const buildInsights = (
   }
 
   if (demand.units === 0) {
-    insights.push('No sales in this window, so the quantity is based on the reorder level.');
+    insights.push(
+      product.stockQuantity <= 0
+        ? 'No sales in this window, so this is a minimum restock to get it back on the shelf.'
+        : 'No sales in this window, so the quantity is based on the reorder level.',
+    );
   }
 
   insights.push(
@@ -174,7 +178,11 @@ const buildInsights = (
       : `No supplier history — assuming a ${leadTimeDays} day lead time.`,
   );
 
-  insights.push(`Recommended quantity is ${suggestedQuantity} units.`);
+  insights.push(
+    suggestedQuantity > 0
+      ? `Recommended quantity is ${suggestedQuantity} units.`
+      : 'Stock already covers the expected demand — nothing to order yet.',
+  );
 
   return insights;
 };
@@ -206,7 +214,14 @@ export const buildOrderSuggestions = (
 
       const targetStock =
         Math.ceil(averageDailySales * (leadTimeDays + TARGET_COVER_DAYS)) + product.reorderLevel;
-      const suggestedQuantity = Math.max(0, targetStock - product.stockQuantity);
+
+      // Nothing on the shelf always warrants an order, even with no demand
+      // signal and a reorder level of zero — otherwise the products losing the
+      // most sales are exactly the ones that stay invisible.
+      const suggestedQuantity =
+        product.stockQuantity <= 0
+          ? Math.max(1, targetStock)
+          : Math.max(0, targetStock - product.stockQuantity);
 
       const trendPercent =
         demand.firstHalfUnits > 0
@@ -249,7 +264,9 @@ export const buildOrderSuggestions = (
         ),
       };
     })
-    .filter((suggestion) => suggestion.suggestedQuantity > 0)
+    // Every active product is listed. The table is a demand ranking, not a
+    // shopping list: what sells fastest sits at the top whether or not it needs
+    // reordering today, so the owner can see the whole picture.
     .sort((a, b) => {
       const rank: Readonly<Record<SuggestionPriority, number>> = {
         critical: 0,
@@ -257,21 +274,34 @@ export const buildOrderSuggestions = (
         healthy: 2,
       };
       if (rank[a.priority] !== rank[b.priority]) return rank[a.priority] - rank[b.priority];
+      if (b.averageDailySales !== a.averageDailySales) {
+        return b.averageDailySales - a.averageDailySales;
+      }
       return b.estimatedCost - a.estimatedCost;
     });
 };
 
+/** Rows the owner can actually act on — the table also lists well-stocked products. */
+export const isOrderable = (suggestion: OrderSuggestion): boolean =>
+  suggestion.suggestedQuantity > 0;
+
 export const summariseSuggestions = (
   suggestions: readonly OrderSuggestion[],
-): SuggestionSummary => ({
-  productsToRestock: suggestions.length,
-  estimatedCost:
-    Math.round(suggestions.reduce((sum, item) => sum + item.estimatedCost, 0) * 100) / 100,
-  suppliersInvolved: new Set(
-    suggestions.map((item) => item.supplierId).filter((id): id is string => id !== null),
-  ).size,
-  criticalStockouts: suggestions.filter((item) => item.priority === 'critical').length,
-});
+): SuggestionSummary => {
+  // The summary answers "what would I buy?", so it counts only the rows with a
+  // quantity behind them, not every product on the ranking.
+  const orderable = suggestions.filter(isOrderable);
+
+  return {
+    productsToRestock: orderable.length,
+    estimatedCost:
+      Math.round(orderable.reduce((sum, item) => sum + item.estimatedCost, 0) * 100) / 100,
+    suppliersInvolved: new Set(
+      orderable.map((item) => item.supplierId).filter((id): id is string => id !== null),
+    ).size,
+    criticalStockouts: suggestions.filter((item) => item.priority === 'critical').length,
+  };
+};
 
 /** The headline insights shown above the table, drawn from the sharpest rows. */
 export const buildHeadlineInsights = (

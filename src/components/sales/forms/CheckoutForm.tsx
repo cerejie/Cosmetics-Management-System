@@ -186,8 +186,13 @@ export const CheckoutForm = (): JSX.Element => {
         Portalled, but still inside the Form's React tree, so these fields stay
         bound to it. Keeping them out of the flow is the point: an inline panel
         grew the card and pushed the pay button out of reach.
+
+        forceRender is required, not cosmetic: without it antd defers the dialog
+        body until the first open, the fields never register, and submitting
+        without touching them yields values with no note or discount at all.
       */}
       <Modal
+        forceRender
         open={advancedOpen}
         title="Discount & note"
         okText="Apply"

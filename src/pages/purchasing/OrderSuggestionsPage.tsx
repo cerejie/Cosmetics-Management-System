@@ -17,6 +17,7 @@ import { useProductStore } from '@/store/inventory/productStore';
 import { useMountEffect } from '@/hooks/common/useMountEffect';
 import {
   buildHeadlineInsights,
+  isOrderable,
   summariseSuggestions,
   type OrderSuggestion,
 } from '@/utils/purchasing/orderSuggestions';
@@ -61,11 +62,19 @@ export const OrderSuggestionsPage = (): JSX.Element => {
   const summary = useMemo(() => summariseSuggestions(suggestions), [suggestions]);
   const insights = useMemo(() => buildHeadlineInsights(suggestions), [suggestions]);
 
-  /** Nothing ticked means "act on everything", which is the usual intent. */
-  const targeted =
-    selectedIds.length > 0
-      ? suggestions.filter((item) => selectedIds.includes(item.productId))
-      : suggestions;
+  /**
+   * Nothing ticked means "act on everything", which is the usual intent. The
+   * table ranks every active product, so well-stocked rows are dropped here —
+   * a purchase line of zero units is meaningless.
+   */
+  const targeted = useMemo(() => {
+    const chosen =
+      selectedIds.length > 0
+        ? suggestions.filter((item) => selectedIds.includes(item.productId))
+        : suggestions;
+
+    return chosen.filter(isOrderable);
+  }, [suggestions, selectedIds]);
 
   const handleGenerateSuggestions = (): void => {
     void generate(products, purchases);
@@ -116,7 +125,7 @@ export const OrderSuggestionsPage = (): JSX.Element => {
             type="primary"
             size="large"
             icon={<ThunderboltOutlined />}
-            disabled={suggestions.length === 0}
+            disabled={targeted.length === 0}
             onClick={handleAddAllToPurchase}
           >
             Add all to a purchase
