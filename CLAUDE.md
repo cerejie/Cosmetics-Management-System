@@ -15,7 +15,7 @@ Inventory and sales management for a cosmetics retail business.
 ## Architecture — hybrid type-based
 
 Top level is organised by technical type. Inside each, by business module
-(`common`, `auth`, `inventory`, `sales`, `dashboard`). Inside module folders,
+(`common`, `auth`, `inventory`, `sales`, `purchasing`, `dashboard`). Inside module folders,
 by category (`forms`, `tables`, `modals`, `cards`, `charts`, `inputs`, …).
 
 ```
@@ -45,6 +45,20 @@ Never skip a layer; components must not import from `api/`.
 - Mutations go through `useAsyncAction()` so toasts stay consistent.
 - New forms: define a zod schema in `schemas/`, then `zodRules(schema.shape)`.
 
+## Purchasing
+
+Deliberately small — the admin using it is not a systems person. A purchase is
+supplier + date + rows of (product, quantity, unit cost); saving it puts the
+goods into inventory straight away. There is no draft, no approval, no partial
+receiving, and no per-line discount or tax. Do not reintroduce them.
+
+Products are created **only** from the purchase screen (the picker's "Add a new
+product"), so a delivery can contain something not yet on file. The Products
+page has no New Product button; it edits and deletes only.
+
+Returns are standalone: supplier + product + quantity + reason, not linked to a
+past purchase order.
+
 ## Authentication — hybrid Supabase Auth + custom JWT
 
 Supabase's free tier caps monthly active Auth users, so **only the superadmin
@@ -68,7 +82,7 @@ session, so RLS is the only authorisation layer.
 
 ## Database
 
-Migrations live in `supabase/migrations/`. Apply them in order (`0001` … `0004`)
+Migrations live in `supabase/migrations/`. Apply them in order (`0001` … `0005`)
 to a new project, then optionally `seed.sql`. **Migration 0004 is not complete
 without its manual steps** — setting `app.settings.jwt_secret` and disabling
 Auth sign-ups; they are listed at the bottom of that file.
@@ -79,14 +93,20 @@ RLS policies need. Nothing else may be granted there.
 
 **Security invariants — do not weaken these:**
 
-- Stock is only ever changed by the `save_product`, `adjust_stock`,
-  `create_sale`, and `void_sale` RPCs. They lock rows (`for update`) so
-  concurrent sales cannot oversell. Direct `insert`/`update` on `products` is
+- Stock is only ever changed by the `create_purchase`, `create_sale`,
+  `void_sale`, and `create_purchase_return` RPCs. They lock rows (`for update`)
+  so concurrent sales cannot oversell. Direct `insert`/`update` on `products` is
   revoked from `authenticated` — never write `stock_quantity` from the client.
-- Editing quantity in the product form is allowed, and `save_product` logs the
-  delta to `stock_movements`. The audit trail must stay complete.
-- `create_sale` reads prices from the database. The client sends only
-  `{product_id, quantity}` — never prices or totals.
+- **Inventory increases only by saving a purchase.** It decreases only by a sale
+  or a return to the supplier. `save_product` has no stock argument and
+  `adjust_stock` is revoked from `authenticated` (migration 0005); the product
+  screen is a catalogue. Do not add an "add stock" path to it.
+- Every stock change writes a `stock_movements` row. The audit trail must stay
+  complete.
+- `create_sale` reads prices from the database; `create_purchase` recomputes
+  every line total and `create_purchase_return` reads the cost from the product.
+  The client sends only quantities and unit costs — never a total it worked out
+  itself.
 - `users.role` is not settable by the user. `register` always creates a *pending
   employee* and never reads a role from its arguments; changes go through
   `set_user_role`. Column grants (`grant update (full_name)`) enforce this,

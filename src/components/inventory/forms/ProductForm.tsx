@@ -25,10 +25,8 @@ const toInitialValues = (product: Product | null): ProductFormValues =>
         categoryId: product.categoryId,
         costPrice: product.costPrice,
         unitPrice: product.unitPrice,
-        stockQuantity: product.stockQuantity,
         reorderLevel: product.reorderLevel,
         isActive: product.isActive,
-        stockReason: '',
       }
     : {
         sku: '',
@@ -37,23 +35,17 @@ const toInitialValues = (product: Product | null): ProductFormValues =>
         categoryId: null,
         costPrice: 0,
         unitPrice: 0,
-        stockQuantity: 0,
         reorderLevel: 0,
         isActive: true,
-        stockReason: '',
       };
 
 export const ProductForm = ({ product, categories, onSubmit }: ProductFormProps): JSX.Element => {
   const [form] = Form.useForm<ProductFormValues>();
-  const isEditing = product !== null;
 
   useEffect(() => {
     form.resetFields();
     form.setFieldsValue(toInitialValues(product));
   }, [form, product]);
-
-  const quantity = Form.useWatch('stockQuantity', form);
-  const delta = product && typeof quantity === 'number' ? quantity - product.stockQuantity : 0;
 
   const handleFinish = (values: ProductFormValues): void => {
     const result = productSchema.safeParse(values);
@@ -112,47 +104,27 @@ export const ProductForm = ({ product, categories, onSubmit }: ProductFormProps)
       </FormSection>
 
       <FormSection title="Stock">
-        <Row gutter={16}>
-          <Col xs={24} sm={12}>
-            <Form.Item
-              name="stockQuantity"
-              label="Quantity on hand"
-              rules={[...rules.stockQuantity]}
-              tooltip="Changing this records an entry in the stock movement log."
-            >
-              <InputNumber min={0} precision={0} style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12}>
-            <Form.Item
-              name="reorderLevel"
-              label="Reorder level"
-              rules={[...rules.reorderLevel]}
-              tooltip="Products at or below this quantity are flagged as low stock."
-            >
-              <InputNumber min={0} precision={0} style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
-        </Row>
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message={
+            product
+              ? `On hand: ${formatNumber(product.stockQuantity)}`
+              : 'New products start with no stock'
+          }
+          description="Stock is only added by receiving a purchase order, and only reduced by a sale or a return to the supplier."
+        />
 
-        {isEditing && delta !== 0 && (
-          <>
-            <Alert
-              type="info"
-              showIcon
-              style={{ marginBottom: 16 }}
-              message={`Stock will change by ${delta > 0 ? '+' : ''}${formatNumber(delta)}`}
-              description="This is logged as an adjustment so the movement history stays accurate."
-            />
-            <Form.Item
-              name="stockReason"
-              label="Reason for the stock change"
-              rules={[...rules.stockReason]}
-            >
-              <Input placeholder="Recount, delivery, damaged unit…" />
-            </Form.Item>
-          </>
-        )}
+        <Form.Item
+          name="reorderLevel"
+          label="Reorder level"
+          rules={[...rules.reorderLevel]}
+          tooltip="Products at or below this quantity are flagged as low stock."
+          style={{ marginBottom: 0 }}
+        >
+          <InputNumber min={0} precision={0} style={{ width: '100%' }} />
+        </Form.Item>
       </FormSection>
 
       <FormSection title="Visibility">

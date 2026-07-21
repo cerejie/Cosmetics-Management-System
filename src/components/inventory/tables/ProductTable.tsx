@@ -1,5 +1,5 @@
 import { Button, Popconfirm, Space, Table, Tag, Tooltip, Typography } from 'antd';
-import { DeleteOutlined, EditOutlined, SwapOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { getStockLevel, type Product, type StockLevel } from '@/types/inventory/inventory.types';
 import { formatCurrency, formatNumber } from '@/utils/common/format';
@@ -21,7 +21,6 @@ interface ProductTableProps {
   readonly loading: boolean;
   readonly canManage: boolean;
   readonly onEdit: (product: Product) => void;
-  readonly onAdjustStock: (product: Product) => void;
   readonly onDelete: (product: Product) => void;
 }
 
@@ -30,7 +29,6 @@ export const ProductTable = ({
   loading,
   canManage,
   onEdit,
-  onAdjustStock,
   onDelete,
 }: ProductTableProps): JSX.Element => {
   const columns: ColumnsType<Product> = [
@@ -99,17 +97,9 @@ export const ProductTable = ({
       title: 'Actions',
       key: 'actions',
       align: 'right',
-      width: 150,
+      width: 110,
       render: (_, product) => (
         <Space size="small">
-          <Tooltip title="Adjust stock">
-            <Button
-              type="text"
-              icon={<SwapOutlined />}
-              onClick={() => onAdjustStock(product)}
-              aria-label={`Adjust stock for ${product.name}`}
-            />
-          </Tooltip>
           <Tooltip title="Edit">
             <Button
               type="text"

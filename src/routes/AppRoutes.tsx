@@ -11,6 +11,11 @@ import { CategoriesPage } from '@/pages/inventory/CategoriesPage';
 import { StockMovementsPage } from '@/pages/inventory/StockMovementsPage';
 import { NewSalePage } from '@/pages/sales/NewSalePage';
 import { SalesHistoryPage } from '@/pages/sales/SalesHistoryPage';
+import { NewPurchasePage } from '@/pages/purchasing/NewPurchasePage';
+import { PurchaseHistoryPage } from '@/pages/purchasing/PurchaseHistoryPage';
+import { SuppliersPage } from '@/pages/purchasing/SuppliersPage';
+import { PurchaseReturnsPage } from '@/pages/purchasing/PurchaseReturnsPage';
+import { OrderSuggestionsPage } from '@/pages/purchasing/OrderSuggestionsPage';
 import { UsersPage } from '@/pages/users/UsersPage';
 import { NotFoundPage } from '@/pages/common/NotFoundPage';
 import { ComingSoonPage } from '@/pages/common/ComingSoonPage';
@@ -53,32 +58,13 @@ export const AppRoutes = (): JSX.Element => (
             }
           />
 
+          <Route path={ROUTE_PATHS.purchasing.newPurchase} element={<NewPurchasePage />} />
+          <Route path={ROUTE_PATHS.purchasing.list} element={<PurchaseHistoryPage />} />
+          <Route path={ROUTE_PATHS.purchasing.suppliers} element={<SuppliersPage />} />
+          <Route path={ROUTE_PATHS.purchasing.returns} element={<PurchaseReturnsPage />} />
           <Route
-            path={ROUTE_PATHS.purchasing.newPurchase}
-            element={
-              <ComingSoonPage
-                title="New purchase"
-                description="Record stock bought from a supplier."
-              />
-            }
-          />
-          <Route
-            path={ROUTE_PATHS.purchasing.list}
-            element={
-              <ComingSoonPage
-                title="Purchase history"
-                description="Past purchase orders and supplier deliveries."
-              />
-            }
-          />
-          <Route
-            path={ROUTE_PATHS.purchasing.reorderPrediction}
-            element={
-              <ComingSoonPage
-                title="Reorder prediction"
-                description="Suggested reorder quantities based on sales velocity."
-              />
-            }
+            path={ROUTE_PATHS.purchasing.orderSuggestions}
+            element={<OrderSuggestionsPage />}
           />
 
           <Route

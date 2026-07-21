@@ -5,7 +5,12 @@
 
 export type AppRole = 'superadmin' | 'admin' | 'employee';
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
-export type StockMovementType = 'purchase' | 'adjustment' | 'sale' | 'sale_reversal';
+export type StockMovementType =
+  | 'purchase'
+  | 'adjustment'
+  | 'sale'
+  | 'sale_reversal'
+  | 'purchase_return';
 export type SaleStatus = 'completed' | 'voided';
 export type PaymentMethod = 'cash' | 'card' | 'gcash' | 'bank_transfer';
 
@@ -81,4 +86,54 @@ export interface SaleItemRow {
   readonly unit_price: number;
   readonly quantity: number;
   readonly line_total: number;
+}
+
+export interface SupplierRow {
+  readonly id: string;
+  readonly name: string;
+  readonly contact_person: string;
+  readonly phone: string;
+  readonly email: string;
+  readonly address: string;
+  readonly note: string;
+  readonly created_at: string;
+  readonly updated_at: string;
+}
+
+export interface PurchaseRow {
+  readonly id: string;
+  readonly reference: string;
+  readonly supplier_id: string;
+  readonly purchase_date: string;
+  readonly total: number;
+  readonly note: string;
+  readonly created_by: string | null;
+  readonly created_at: string;
+}
+
+export interface PurchaseItemRow {
+  readonly id: string;
+  readonly purchase_id: string;
+  readonly product_id: string;
+  readonly product_name: string;
+  readonly sku: string;
+  readonly quantity: number;
+  readonly unit_cost: number;
+  readonly line_total: number;
+}
+
+export interface PurchaseReturnRow {
+  readonly id: string;
+  readonly reference: string;
+  readonly supplier_id: string;
+  readonly product_id: string;
+  readonly product_name: string;
+  readonly sku: string;
+  readonly return_date: string;
+  readonly quantity: number;
+  readonly unit_cost: number;
+  readonly total_amount: number;
+  readonly reason: string;
+  readonly created_by: string | null;
+  readonly created_at: string;
 }

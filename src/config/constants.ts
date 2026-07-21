@@ -26,4 +26,5 @@ export const STOCK_MOVEMENT_LABELS: Readonly<Record<StockMovementType, string>> 
   adjustment: 'Adjustment',
   sale: 'Purchase',
   sale_reversal: 'Purchase reversed',
+  purchase_return: 'Returned to supplier',
 };

@@ -4,7 +4,6 @@ import { getErrorMessage } from '@/api/common/apiError';
 import type { AsyncStatus } from '@/types/common/api.types';
 import type { Product } from '@/types/inventory/inventory.types';
 import type { ProductFormValues } from '@/schemas/inventory/product.schema';
-import type { StockAdjustmentValues } from '@/schemas/inventory/stockAdjustment.schema';
 
 interface ProductState {
   readonly products: readonly Product[];
@@ -18,7 +17,6 @@ interface ProductState {
   readonly lowStockOnly: boolean;
   readonly formOpen: boolean;
   readonly editingProduct: Product | null;
-  readonly adjustingProduct: Product | null;
 
   readonly loadProducts: () => Promise<void>;
   readonly setSearch: (search: string) => void;
@@ -27,12 +25,11 @@ interface ProductState {
   readonly openCreateForm: () => void;
   readonly openEditForm: (product: Product) => void;
   readonly closeForm: () => void;
-  readonly openStockAdjustment: (product: Product) => void;
-  readonly closeStockAdjustment: () => void;
   /** `id` null creates, otherwise updates. */
   readonly saveProduct: (id: string | null, values: ProductFormValues) => Promise<void>;
+  /** Creates and returns the product, for the purchase screen's quick add. */
+  readonly createProduct: (values: ProductFormValues) => Promise<Product>;
   readonly deleteProduct: (id: string) => Promise<void>;
-  readonly adjustStock: (productId: string, values: StockAdjustmentValues) => Promise<void>;
 }
 
 export const useProductStore = create<ProductState>((set, get) => ({
@@ -46,7 +43,6 @@ export const useProductStore = create<ProductState>((set, get) => ({
   lowStockOnly: false,
   formOpen: false,
   editingProduct: null,
-  adjustingProduct: null,
 
   loadProducts: async () => {
     set({ status: 'loading', error: null });
@@ -65,9 +61,6 @@ export const useProductStore = create<ProductState>((set, get) => ({
   openEditForm: (product) => set({ formOpen: true, editingProduct: product }),
   closeForm: () => set({ formOpen: false, editingProduct: null }),
 
-  openStockAdjustment: (product) => set({ adjustingProduct: product }),
-  closeStockAdjustment: () => set({ adjustingProduct: null }),
-
   saveProduct: async (id, values) => {
     set({ saving: true });
     try {
@@ -79,19 +72,19 @@ export const useProductStore = create<ProductState>((set, get) => ({
     }
   },
 
-  deleteProduct: async (id) => {
-    await productsService.deleteProduct(id);
-    await get().loadProducts();
-  },
-
-  adjustStock: async (productId, values) => {
+  createProduct: async (values) => {
     set({ saving: true });
     try {
-      await productsService.adjustStock(productId, values);
+      const product = await productsService.createProduct(values);
       await get().loadProducts();
-      set({ adjustingProduct: null });
+      return product;
     } finally {
       set({ saving: false });
     }
+  },
+
+  deleteProduct: async (id) => {
+    await productsService.deleteProduct(id);
+    await get().loadProducts();
   },
 }));

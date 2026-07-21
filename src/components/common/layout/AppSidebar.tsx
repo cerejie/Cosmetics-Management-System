@@ -9,8 +9,8 @@ import {
   FileTextOutlined,
   FundOutlined,
   HomeOutlined,
-  LineChartOutlined,
   PlusCircleOutlined,
+  RobotOutlined,
   SettingOutlined,
   ShoppingCartOutlined,
   SwapOutlined,
@@ -78,9 +78,19 @@ const SidebarNav = ({ onNavigate }: { readonly onNavigate?: () => void }): JSX.E
                 label: 'Purchase History',
               },
               {
-                key: ROUTE_PATHS.purchasing.reorderPrediction,
-                icon: <LineChartOutlined />,
-                label: 'Reorder Prediction',
+                key: ROUTE_PATHS.purchasing.suppliers,
+                icon: <TeamOutlined />,
+                label: 'Suppliers',
+              },
+              {
+                key: ROUTE_PATHS.purchasing.returns,
+                icon: <SwapOutlined />,
+                label: 'Purchase Returns',
+              },
+              {
+                key: ROUTE_PATHS.purchasing.orderSuggestions,
+                icon: <RobotOutlined />,
+                label: 'AI Order Suggestions',
               },
             ]
           : [],

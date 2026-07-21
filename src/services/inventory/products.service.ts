@@ -1,7 +1,6 @@
 import * as productsApi from '@/api/inventory/products.api';
 import { toProduct, type Product } from '@/types/inventory/inventory.types';
 import type { ProductFormValues } from '@/schemas/inventory/product.schema';
-import type { StockAdjustmentValues } from '@/schemas/inventory/stockAdjustment.schema';
 
 export const listProducts = async (): Promise<readonly Product[]> =>
   (await productsApi.fetchProducts()).map(toProduct);
@@ -19,24 +18,29 @@ export const saveProduct = async (
     categoryId: values.categoryId,
     costPrice: values.costPrice,
     unitPrice: values.unitPrice,
-    stockQuantity: values.stockQuantity,
     reorderLevel: values.reorderLevel,
     isActive: values.isActive,
-    stockReason: values.stockReason.trim(),
   });
 };
 
-export const deleteProduct = (id: string): Promise<void> => productsApi.deleteProduct(id);
+/**
+ * Creates a product and hands it back, so the purchase screen can select the
+ * new product onto the row that asked for it.
+ */
+export const createProduct = async (values: ProductFormValues): Promise<Product> => {
+  const row = await productsApi.saveProduct({
+    id: null,
+    sku: values.sku.trim().toUpperCase(),
+    name: values.name.trim(),
+    brand: values.brand.trim(),
+    categoryId: values.categoryId,
+    costPrice: values.costPrice,
+    unitPrice: values.unitPrice,
+    reorderLevel: values.reorderLevel,
+    isActive: values.isActive,
+  });
 
-export const adjustStock = async (
-  productId: string,
-  values: StockAdjustmentValues,
-): Promise<void> => {
-  const signedQuantity = values.direction === 'in' ? values.quantity : -values.quantity;
-  await productsApi.adjustStock(
-    productId,
-    signedQuantity,
-    values.direction === 'in' ? 'purchase' : 'adjustment',
-    values.reason.trim(),
-  );
+  return toProduct({ ...row, categories: null });
 };
+
+export const deleteProduct = (id: string): Promise<void> => productsApi.deleteProduct(id);

@@ -15,6 +15,7 @@ const TYPE_COLORS: Readonly<Record<StockMovementType, string>> = {
   adjustment: 'blue',
   sale: 'magenta',
   sale_reversal: 'orange',
+  purchase_return: 'volcano',
 };
 
 interface StockMovementTableProps {

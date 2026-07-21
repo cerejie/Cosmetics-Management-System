@@ -7,11 +7,13 @@ export const ROUTE_PATHS = {
     newSale: '/sales/new',
     analytics: '/sales/analytics',
   },
-  /** Supplier-side restocking. Not built yet — every screen is a placeholder. */
+  /** Supplier-side restocking — the only way stock enters the business. */
   purchasing: {
     list: '/purchasing',
     newPurchase: '/purchasing/new',
-    reorderPrediction: '/purchasing/reorder-prediction',
+    suppliers: '/purchasing/suppliers',
+    returns: '/purchasing/returns',
+    orderSuggestions: '/purchasing/order-suggestions',
   },
   inventory: {
     products: '/inventory/products',
