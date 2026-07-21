@@ -24,6 +24,6 @@ export const PAYMENT_METHOD_LABELS: Readonly<Record<PaymentMethod, string>> = {
 export const STOCK_MOVEMENT_LABELS: Readonly<Record<StockMovementType, string>> = {
   purchase: 'Stock in',
   adjustment: 'Adjustment',
-  sale: 'Sale',
-  sale_reversal: 'Sale reversed',
+  sale: 'Purchase',
+  sale_reversal: 'Purchase reversed',
 };

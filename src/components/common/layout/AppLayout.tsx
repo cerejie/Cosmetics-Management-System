@@ -12,7 +12,9 @@ export const AppLayout = (): JSX.Element => (
     <Layout>
       <AppHeader />
       <Content className={styles.content}>
-        <Outlet />
+        <div className={styles.contentInner}>
+          <Outlet />
+        </div>
       </Content>
     </Layout>
   </Layout>

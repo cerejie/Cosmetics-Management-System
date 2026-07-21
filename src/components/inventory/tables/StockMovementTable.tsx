@@ -3,6 +3,12 @@ import type { ColumnsType } from 'antd/es/table';
 import type { StockMovement, StockMovementType } from '@/types/inventory/inventory.types';
 import { STOCK_MOVEMENT_LABELS } from '@/config/constants';
 import { formatDateTime, formatNumber } from '@/utils/common/format';
+import { EmptyState } from '@/components/common/feedback/EmptyState';
+import {
+  TABLE_SCROLL,
+  TABLE_STICKY,
+  tablePagination,
+} from '@/components/common/tables/tableDefaults';
 
 const TYPE_COLORS: Readonly<Record<StockMovementType, string>> = {
   purchase: 'green',
@@ -79,8 +85,17 @@ export const StockMovementTable = ({
       columns={columns}
       dataSource={movements as StockMovement[]}
       loading={loading}
-      pagination={{ pageSize: 15, showSizeChanger: true }}
-      scroll={{ x: 'max-content' }}
+      pagination={tablePagination('movements', 15)}
+      scroll={TABLE_SCROLL}
+      sticky={TABLE_STICKY}
+      locale={{
+        emptyText: (
+          <EmptyState
+            title="No stock movements yet"
+            description="Adjustments, purchases and restocks will appear here as they happen."
+          />
+        ),
+      }}
     />
   );
 };

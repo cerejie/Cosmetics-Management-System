@@ -1,50 +1,30 @@
-import { Avatar, Dropdown, Layout, Space, Tag, Typography } from 'antd';
-import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/store/auth/authStore';
-import { useAuth } from '@/hooks/auth/useAuth';
-import { useAsyncAction } from '@/hooks/common/useAsyncAction';
-import { ROLE_LABELS, type AppRole } from '@/types/auth/auth.types';
-import { ROUTE_PATHS } from '@/config/routes';
+import { Button, Layout, Typography } from 'antd';
+import { MenuOutlined, SkinOutlined } from '@ant-design/icons';
+import { useLayoutStore } from '@/store/common/layoutStore';
 import * as styles from './AppLayout.css';
 
 const { Header } = Layout;
 
-const ROLE_COLORS: Readonly<Record<AppRole, string>> = {
-  superadmin: 'purple',
-  admin: 'magenta',
-  employee: 'default',
-};
-
+/**
+ * Mobile-only bar. On `lg` and up the sidebar carries the brand and the account
+ * menu, so the app has no top chrome and the page title leads the screen.
+ */
 export const AppHeader = (): JSX.Element => {
-  const { user, role } = useAuth();
-  const signOut = useAuthStore((state) => state.signOut);
-  const navigate = useNavigate();
-  const runAction = useAsyncAction();
-
-  const handleSignOut = async (): Promise<void> => {
-    await runAction(signOut);
-    navigate(ROUTE_PATHS.login, { replace: true });
-  };
+  const openMobileNav = useLayoutStore((state) => state.openMobileNav);
 
   return (
     <Header className={styles.header}>
-      <Typography.Text type="secondary">
-        {user ? `Signed in as ${user.fullName || user.email}` : ''}
-      </Typography.Text>
+      <Button
+        type="text"
+        icon={<MenuOutlined />}
+        onClick={openMobileNav}
+        aria-label="Open navigation"
+      />
 
-      <Dropdown
-        menu={{
-          items: [{ key: 'sign-out', icon: <LogoutOutlined />, label: 'Sign out', danger: true }],
-          onClick: handleSignOut,
-        }}
-        trigger={['click']}
-      >
-        <Space style={{ cursor: 'pointer' }}>
-          <Avatar icon={<UserOutlined />} />
-          {role && <Tag color={ROLE_COLORS[role]}>{ROLE_LABELS[role]}</Tag>}
-        </Space>
-      </Dropdown>
+      <span className={styles.brandMark} aria-hidden>
+        <SkinOutlined />
+      </span>
+      <Typography.Text className={styles.brandName}>Cosmetics MS</Typography.Text>
     </Header>
   );
 };

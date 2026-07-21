@@ -3,6 +3,12 @@ import { DeleteOutlined, EditOutlined, SwapOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { getStockLevel, type Product, type StockLevel } from '@/types/inventory/inventory.types';
 import { formatCurrency, formatNumber } from '@/utils/common/format';
+import { EmptyState } from '@/components/common/feedback/EmptyState';
+import {
+  TABLE_SCROLL,
+  TABLE_STICKY,
+  tablePagination,
+} from '@/components/common/tables/tableDefaults';
 
 const STOCK_TAGS: Readonly<Record<StockLevel, { color: string; label: string }>> = {
   out_of_stock: { color: 'error', label: 'Out of stock' },
@@ -114,7 +120,7 @@ export const ProductTable = ({
           </Tooltip>
           <Popconfirm
             title="Delete this product?"
-            description="Products used in past sales cannot be deleted."
+            description="Products used in past purchases cannot be deleted."
             okText="Delete"
             okButtonProps={{ danger: true }}
             onConfirm={() => onDelete(product)}
@@ -137,8 +143,17 @@ export const ProductTable = ({
       columns={columns}
       dataSource={products as Product[]}
       loading={loading}
-      pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} products` }}
-      scroll={{ x: 'max-content' }}
+      pagination={tablePagination('products')}
+      scroll={TABLE_SCROLL}
+      sticky={TABLE_STICKY}
+      locale={{
+        emptyText: (
+          <EmptyState
+            title="No products match these filters"
+            description="Try a different search term, or clear the category and low-stock filters."
+          />
+        ),
+      }}
     />
   );
 };

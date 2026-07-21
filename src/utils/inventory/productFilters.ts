@@ -25,6 +25,21 @@ export const filterProducts = (
   });
 };
 
+export type ProductSort = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc' | 'stock-desc';
+
+const COMPARATORS: Readonly<Record<ProductSort, (a: Product, b: Product) => number>> = {
+  'name-asc': (a, b) => a.name.localeCompare(b.name),
+  'name-desc': (a, b) => b.name.localeCompare(a.name),
+  'price-asc': (a, b) => a.unitPrice - b.unitPrice,
+  'price-desc': (a, b) => b.unitPrice - a.unitPrice,
+  'stock-desc': (a, b) => b.stockQuantity - a.stockQuantity,
+};
+
+export const sortProducts = (
+  products: readonly Product[],
+  sort: ProductSort,
+): readonly Product[] => [...products].sort(COMPARATORS[sort]);
+
 export interface InventorySummary {
   readonly totalProducts: number;
   readonly lowStockCount: number;

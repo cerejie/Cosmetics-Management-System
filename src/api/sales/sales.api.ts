@@ -17,7 +17,7 @@ export const fetchSales = async (limit = 200): Promise<readonly SaleRowWithRelat
     .limit(limit)
     .returns<SaleRowWithRelations[]>();
 
-  if (error) throw toApiError(error, 'Unable to load sales.');
+  if (error) throw toApiError(error, 'Unable to load purchases.');
   return data ?? [];
 };
 
@@ -44,7 +44,7 @@ export const createSale = async (payload: CreateSalePayload): Promise<SaleRow> =
     p_note: payload.note,
   });
 
-  if (error) throw toApiError(error, 'Unable to record the sale.');
+  if (error) throw toApiError(error, 'Unable to record the purchase.');
   return data as SaleRow;
 };
 
@@ -54,6 +54,6 @@ export const voidSale = async (saleId: string, reason: string): Promise<SaleRow>
     p_reason: reason,
   });
 
-  if (error) throw toApiError(error, 'Unable to void the sale.');
+  if (error) throw toApiError(error, 'Unable to void the purchase.');
   return data as SaleRow;
 };

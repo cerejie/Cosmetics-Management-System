@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Layout, Menu, Typography } from 'antd';
+import { Drawer, Layout, Menu, Typography } from 'antd';
 import {
   DashboardOutlined,
   ShoppingOutlined,
@@ -15,16 +15,27 @@ import type { MenuProps } from 'antd';
 import { ROUTE_PATHS } from '@/config/routes';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { useLayoutStore } from '@/store/common/layoutStore';
+import { SidebarAccount } from './SidebarAccount';
 import * as styles from './AppLayout.css';
 
 const { Sider } = Layout;
 
-export const AppSidebar = (): JSX.Element => {
+const SIDEBAR_WIDTH = 248;
+
+const SidebarBrand = (): JSX.Element => (
+  <div className={styles.brand}>
+    <span className={styles.brandMark} aria-hidden>
+      <SkinOutlined />
+    </span>
+    <Typography.Text className={styles.brandName}>Cosmetics MS</Typography.Text>
+  </div>
+);
+
+/** Brand, navigation and account — shared by the desktop rail and the drawer. */
+const SidebarNav = ({ onNavigate }: { readonly onNavigate?: () => void }): JSX.Element => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { isAdmin, canManageUsers } = useAuth();
-  const collapsed = useLayoutStore((state) => state.sidebarCollapsed);
-  const setCollapsed = useLayoutStore((state) => state.setSidebarCollapsed);
 
   const items = useMemo<MenuProps['items']>(
     () => [
@@ -32,10 +43,10 @@ export const AppSidebar = (): JSX.Element => {
       {
         key: 'sales',
         icon: <FileTextOutlined />,
-        label: 'Sales',
+        label: 'Purchases',
         children: [
-          { key: ROUTE_PATHS.sales.newSale, icon: <PlusCircleOutlined />, label: 'New sale' },
-          { key: ROUTE_PATHS.sales.list, label: 'Sales history' },
+          { key: ROUTE_PATHS.sales.newSale, icon: <PlusCircleOutlined />, label: 'New purchase' },
+          { key: ROUTE_PATHS.sales.list, label: 'Purchase history' },
         ],
       },
       {
@@ -64,27 +75,52 @@ export const AppSidebar = (): JSX.Element => {
   );
 
   return (
-    <Sider
-      collapsible
-      collapsed={collapsed}
-      onCollapse={setCollapsed}
-      breakpoint="lg"
-      theme="light"
-      width={232}
-      className={styles.sider}
-    >
-      <Typography.Text className={styles.brand}>
-        <SkinOutlined />
-        {!collapsed && 'Cosmetics MS'}
-      </Typography.Text>
+    <div className={styles.nav}>
+      <SidebarBrand />
 
       <Menu
         mode="inline"
         selectedKeys={[pathname]}
         defaultOpenKeys={['sales', 'inventory']}
         items={items}
-        onClick={({ key }) => navigate(key)}
+        onClick={({ key }) => {
+          navigate(key);
+          onNavigate?.();
+        }}
+        className={styles.navMenu}
+        style={{ borderInlineEnd: 'none' }}
       />
-    </Sider>
+
+      <SidebarAccount />
+    </div>
+  );
+};
+
+/**
+ * A fixed rail on `lg` and up, a drawer below it. Which one shows is decided in
+ * CSS; the drawer only mounts its contents once it has been opened.
+ */
+export const AppSidebar = (): JSX.Element => {
+  const open = useLayoutStore((state) => state.mobileNavOpen);
+  const closeMobileNav = useLayoutStore((state) => state.closeMobileNav);
+
+  return (
+    <>
+      <Sider theme="light" width={SIDEBAR_WIDTH} className={styles.sider}>
+        <SidebarNav />
+      </Sider>
+
+      <Drawer
+        open={open}
+        onClose={closeMobileNav}
+        placement="left"
+        width={SIDEBAR_WIDTH}
+        closable={false}
+        styles={{ body: { padding: 0 } }}
+        aria-label="Main navigation"
+      >
+        <SidebarNav onNavigate={closeMobileNav} />
+      </Drawer>
+    </>
   );
 };

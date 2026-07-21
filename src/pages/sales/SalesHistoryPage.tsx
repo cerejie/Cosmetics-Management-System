@@ -34,7 +34,7 @@ export const SalesHistoryPage = (): JSX.Element => {
   return (
     <>
       <PageHeader
-        title="Sales history"
+        title="Purchase history"
         description="Every transaction recorded by your team."
         extra={
           <Button
@@ -42,7 +42,7 @@ export const SalesHistoryPage = (): JSX.Element => {
             icon={<PlusOutlined />}
             onClick={() => navigate(ROUTE_PATHS.sales.newSale)}
           >
-            New sale
+            New purchase
           </Button>
         }
       />

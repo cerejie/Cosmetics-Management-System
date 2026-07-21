@@ -1,12 +1,32 @@
 import { create } from 'zustand';
 import type { CartLine } from '@/types/sales/sales.types';
 import type { Product } from '@/types/inventory/inventory.types';
+import type { ProductSort } from '@/utils/inventory/productFilters';
 
 interface CartState {
   readonly lines: readonly CartLine[];
-  /** Search box in the sale's product picker, kept separate from the inventory filters. */
+
+  /** Picker filters, kept separate from the inventory page's own filters. */
   readonly pickerSearch: string;
+  readonly pickerCategoryId: string | null;
+  readonly pickerLowStockOnly: boolean;
+  readonly pickerSort: ProductSort;
+
+  /** Panels and overlays owned by the new-sale screen. */
+  readonly scanOpen: boolean;
+  readonly advancedOpen: boolean;
+  readonly tipDismissed: boolean;
+
   readonly setPickerSearch: (search: string) => void;
+  readonly setPickerCategoryId: (categoryId: string | null) => void;
+  readonly setPickerLowStockOnly: (lowStockOnly: boolean) => void;
+  readonly setPickerSort: (sort: ProductSort) => void;
+  readonly resetPickerFilters: () => void;
+
+  readonly setScanOpen: (open: boolean) => void;
+  readonly setAdvancedOpen: (open: boolean) => void;
+  readonly dismissTip: () => void;
+
   readonly addProduct: (product: Product) => void;
   readonly setQuantity: (productId: string, quantity: number) => void;
   readonly removeLine: (productId: string) => void;
@@ -24,9 +44,26 @@ const toLine = (product: Product, quantity: number): CartLine => ({
 
 export const useCartStore = create<CartState>((set) => ({
   lines: [],
+
   pickerSearch: '',
+  pickerCategoryId: null,
+  pickerLowStockOnly: false,
+  pickerSort: 'name-asc',
+
+  scanOpen: false,
+  advancedOpen: false,
+  tipDismissed: false,
 
   setPickerSearch: (pickerSearch) => set({ pickerSearch }),
+  setPickerCategoryId: (pickerCategoryId) => set({ pickerCategoryId }),
+  setPickerLowStockOnly: (pickerLowStockOnly) => set({ pickerLowStockOnly }),
+  setPickerSort: (pickerSort) => set({ pickerSort }),
+  resetPickerFilters: () =>
+    set({ pickerSearch: '', pickerCategoryId: null, pickerLowStockOnly: false }),
+
+  setScanOpen: (scanOpen) => set({ scanOpen }),
+  setAdvancedOpen: (advancedOpen) => set({ advancedOpen }),
+  dismissTip: () => set({ tipDismissed: true }),
 
   addProduct: (product) =>
     set((state) => {

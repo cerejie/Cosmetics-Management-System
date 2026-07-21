@@ -20,7 +20,7 @@ export const LoginPage = (): JSX.Element => {
           <Typography.Title level={3} style={{ margin: 0 }}>
             <SkinOutlined /> Cosmetics MS
           </Typography.Title>
-          <Typography.Text type="secondary">Inventory and sales management</Typography.Text>
+          <Typography.Text type="secondary">Inventory and purchase management</Typography.Text>
         </Flex>
 
         <LoginForm />

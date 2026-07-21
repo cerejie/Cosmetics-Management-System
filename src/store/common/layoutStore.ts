@@ -1,13 +1,14 @@
 import { create } from 'zustand';
 
 interface LayoutState {
-  readonly sidebarCollapsed: boolean;
-  readonly toggleSidebar: () => void;
-  readonly setSidebarCollapsed: (collapsed: boolean) => void;
+  /** Below `lg` the sidebar is a drawer instead of a fixed rail. */
+  readonly mobileNavOpen: boolean;
+  readonly openMobileNav: () => void;
+  readonly closeMobileNav: () => void;
 }
 
 export const useLayoutStore = create<LayoutState>((set) => ({
-  sidebarCollapsed: false,
-  toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
-  setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
+  mobileNavOpen: false,
+  openMobileNav: () => set({ mobileNavOpen: true }),
+  closeMobileNav: () => set({ mobileNavOpen: false }),
 }));

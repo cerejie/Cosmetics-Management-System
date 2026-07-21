@@ -61,8 +61,8 @@ export const SaleDetailModal = (): JSX.Element => {
     if (!sale) return;
 
     const result = await runAction(
-      () => voidSale(sale.id, 'Voided from sales history'),
-      `Sale ${sale.reference} voided and stock restored.`,
+      () => voidSale(sale.id, 'Voided from purchase history'),
+      `Purchase ${sale.reference} voided and stock restored.`,
     );
 
     // Voiding returns stock, so the product catalogue is now stale.
@@ -73,7 +73,7 @@ export const SaleDetailModal = (): JSX.Element => {
 
   return (
     <Modal
-      title={sale ? `Sale ${sale.reference}` : 'Sale'}
+      title={sale ? `Purchase ${sale.reference}` : 'Purchase'}
       open={sale !== null}
       onCancel={closeDetail}
       footer={null}
@@ -123,13 +123,13 @@ export const SaleDetailModal = (): JSX.Element => {
             <>
               <Divider />
               <Popconfirm
-                title="Void this sale?"
+                title="Void this purchase?"
                 description="Stock will be returned to inventory. This cannot be undone."
-                okText="Void sale"
+                okText="Void purchase"
                 okButtonProps={{ danger: true }}
                 onConfirm={handleVoid}
               >
-                <Typography.Link type="danger">Void this sale</Typography.Link>
+                <Typography.Link type="danger">Void this purchase</Typography.Link>
               </Popconfirm>
             </>
           )}

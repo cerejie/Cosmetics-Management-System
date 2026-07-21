@@ -23,7 +23,7 @@ export const StockMovementsPage = (): JSX.Element => {
     <>
       <PageHeader
         title="Stock movements"
-        description="Every change to stock, from deliveries to sales, in one audit trail."
+        description="Every change to stock, from deliveries to purchases, in one audit trail."
       />
 
       <Card variant="outlined">

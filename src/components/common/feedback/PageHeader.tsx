@@ -8,13 +8,24 @@ interface PageHeaderProps {
 }
 
 export const PageHeader = ({ title, description, extra }: PageHeaderProps): JSX.Element => (
-  <Flex justify="space-between" align="flex-start" gap="middle" wrap style={{ marginBottom: 24 }}>
-    <Flex vertical gap={4}>
-      <Typography.Title level={3} style={{ margin: 0 }}>
+  <Flex justify="space-between" align="center" gap={16} wrap style={{ marginBottom: 24 }}>
+    <Flex vertical gap={4} style={{ minWidth: 0 }}>
+      <Typography.Title
+        level={2}
+        style={{ margin: 0, fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em' }}
+      >
         {title}
       </Typography.Title>
-      {description && <Typography.Text type="secondary">{description}</Typography.Text>}
+      {description && (
+        <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+          {description}
+        </Typography.Text>
+      )}
     </Flex>
-    {extra}
+    {extra && (
+      <Flex gap={8} align="center" wrap>
+        {extra}
+      </Flex>
+    )}
   </Flex>
 );

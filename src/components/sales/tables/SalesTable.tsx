@@ -3,6 +3,12 @@ import type { ColumnsType } from 'antd/es/table';
 import { PAYMENT_METHOD_LABELS } from '@/config/constants';
 import { formatCurrency, formatDateTime } from '@/utils/common/format';
 import type { PaymentMethod, Sale } from '@/types/sales/sales.types';
+import { EmptyState } from '@/components/common/feedback/EmptyState';
+import {
+  TABLE_SCROLL,
+  TABLE_STICKY,
+  tablePagination,
+} from '@/components/common/tables/tableDefaults';
 
 interface SalesTableProps {
   readonly sales: readonly Sale[];
@@ -98,8 +104,17 @@ export const SalesTable = ({ sales, loading, onViewDetail }: SalesTableProps): J
       columns={columns}
       dataSource={sales as Sale[]}
       loading={loading}
-      pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} sales` }}
-      scroll={{ x: 'max-content' }}
+      pagination={tablePagination('purchases')}
+      scroll={TABLE_SCROLL}
+      sticky={TABLE_STICKY}
+      locale={{
+        emptyText: (
+          <EmptyState
+            title="No purchases recorded"
+            description="Completed purchases will show up here once you record the first one."
+          />
+        ),
+      }}
     />
   );
 };

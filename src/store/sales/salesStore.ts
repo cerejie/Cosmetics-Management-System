@@ -37,7 +37,7 @@ export const useSalesStore = create<SalesState>((set, get) => ({
     try {
       set({ sales: await salesService.listSales(), status: 'success' });
     } catch (error) {
-      set({ status: 'error', error: getErrorMessage(error, 'Unable to load sales.') });
+      set({ status: 'error', error: getErrorMessage(error, 'Unable to load purchases.') });
     }
   },
 
