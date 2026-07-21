@@ -1,6 +1,7 @@
-import { Alert, Button, Flex, Form, Input, Typography } from 'antd';
-import { LockOutlined, UserOutlined } from '@ant-design/icons';
+import { Button, Divider, Flex, Form, Input, Typography } from 'antd';
+import { ArrowRightOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { FormError } from '@/components/common/feedback/FormError';
 import { useAuthStore } from '@/store/auth/authStore';
 import { loginSchema, type LoginValues } from '@/schemas/auth/login.schema';
 import { zodRules } from '@/utils/common/formRules';
@@ -32,42 +33,55 @@ export const LoginForm = (): JSX.Element => {
 
   return (
     <Form form={form} layout="vertical" onFinish={handleFinish} requiredMark={false} size="large">
-      {error && (
-        <Form.Item>
-          <Alert type="error" message={error} showIcon />
-        </Form.Item>
-      )}
+      <FormError message={error} />
 
-      <Form.Item
-        name="identifier"
-        label="Username"
-        rules={[...rules.identifier]}
-        extra="The super admin signs in with their email address."
-      >
+      <Form.Item name="identifier" label="Username or email" rules={[...rules.identifier]}>
         <Input
           prefix={<UserOutlined />}
-          placeholder="your username"
+          placeholder="Your username, or email for the superadmin"
           autoComplete="username"
           autoCapitalize="none"
           spellCheck={false}
+          autoFocus
         />
       </Form.Item>
 
       <Form.Item name="password" label="Password" rules={[...rules.password]}>
         <Input.Password
           prefix={<LockOutlined />}
-          placeholder="Your password"
+          placeholder="Enter your password"
           autoComplete="current-password"
         />
       </Form.Item>
 
-      <Button type="primary" htmlType="submit" loading={signingIn} block>
-        Sign in
+      <Button
+        type="primary"
+        htmlType="submit"
+        loading={signingIn}
+        block
+        icon={<ArrowRightOutlined />}
+        iconPosition="end"
+      >
+        Sign In
       </Button>
 
-      <Flex justify="center" gap={4} style={{ marginTop: 16 }}>
-        <Typography.Text type="secondary">No account yet?</Typography.Text>
-        <Link to={ROUTE_PATHS.register}>Request access</Link>
+      {/* Sessions are a hard 8 hours with no refresh, so say so rather than
+          offering a "remember me" the backend cannot honour. */}
+      <Typography.Paragraph
+        type="secondary"
+        style={{ marginTop: 12, marginBottom: 0, textAlign: 'center', fontSize: 12 }}
+      >
+        Sessions last 8 hours.
+      </Typography.Paragraph>
+
+      <Divider />
+
+      <Flex vertical align="center" gap={4}>
+        <Typography.Text strong>Need an account?</Typography.Text>
+        <Typography.Text type="secondary">Contact your system administrator.</Typography.Text>
+        <Link to={ROUTE_PATHS.register}>
+          Request Access <ArrowRightOutlined />
+        </Link>
       </Flex>
     </Form>
   );

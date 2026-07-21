@@ -1,12 +1,11 @@
 import { useEffect } from 'react';
-import { Card, Flex, Typography } from 'antd';
-import { SkinOutlined } from '@ant-design/icons';
+import { UserAddOutlined } from '@ant-design/icons';
 import { Navigate } from 'react-router-dom';
+import { AuthLayout } from '@/components/auth/layout/AuthLayout';
 import { RegisterForm } from '@/components/auth/forms/RegisterForm';
 import { useAuthStore } from '@/store/auth/authStore';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { ROUTE_PATHS } from '@/config/routes';
-import * as styles from './LoginPage.css';
 
 export const RegisterPage = (): JSX.Element => {
   const { isAuthenticated } = useAuth();
@@ -20,17 +19,12 @@ export const RegisterPage = (): JSX.Element => {
   }
 
   return (
-    <Flex className={styles.page}>
-      <Card className={styles.card} variant="outlined">
-        <Flex vertical align="center" gap={4} style={{ marginBottom: 24 }}>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            <SkinOutlined /> Cosmetics MS
-          </Typography.Title>
-          <Typography.Text type="secondary">Request an account</Typography.Text>
-        </Flex>
-
-        <RegisterForm />
-      </Card>
-    </Flex>
+    <AuthLayout
+      icon={<UserAddOutlined />}
+      title="Request Access"
+      subtitle="An administrator approves new accounts"
+    >
+      <RegisterForm />
+    </AuthLayout>
   );
 };

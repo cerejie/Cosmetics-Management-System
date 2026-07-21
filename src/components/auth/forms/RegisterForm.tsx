@@ -1,6 +1,7 @@
-import { Alert, Button, Flex, Form, Input, Result, Typography } from 'antd';
+import { Button, Flex, Form, Input, Result, Typography } from 'antd';
 import { IdcardOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
+import { FormError } from '@/components/common/feedback/FormError';
 import { useAuthStore } from '@/store/auth/authStore';
 import { registerFields, type RegisterValues } from '@/schemas/auth/register.schema';
 import { zodRules } from '@/utils/common/formRules';
@@ -36,11 +37,7 @@ export const RegisterForm = (): JSX.Element => {
 
   return (
     <Form form={form} layout="vertical" onFinish={handleFinish} requiredMark={false} size="large">
-      {error && (
-        <Form.Item>
-          <Alert type="error" message={error} showIcon />
-        </Form.Item>
-      )}
+      <FormError message={error} />
 
       <Form.Item name="fullName" label="Full name" rules={[...rules.fullName]}>
         <Input prefix={<IdcardOutlined />} placeholder="Jane Dela Cruz" autoComplete="name" />

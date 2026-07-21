@@ -1,10 +1,9 @@
-import { Card, Flex, Typography } from 'antd';
-import { SkinOutlined } from '@ant-design/icons';
+import { LockOutlined } from '@ant-design/icons';
 import { Navigate } from 'react-router-dom';
+import { AuthLayout } from '@/components/auth/layout/AuthLayout';
 import { LoginForm } from '@/components/auth/forms/LoginForm';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { ROUTE_PATHS } from '@/config/routes';
-import * as styles from './LoginPage.css';
 
 export const LoginPage = (): JSX.Element => {
   const { isAuthenticated } = useAuth();
@@ -14,17 +13,12 @@ export const LoginPage = (): JSX.Element => {
   }
 
   return (
-    <Flex className={styles.page}>
-      <Card className={styles.card} variant="outlined">
-        <Flex vertical align="center" gap={4} style={{ marginBottom: 24 }}>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            <SkinOutlined /> Cosmetics MS
-          </Typography.Title>
-          <Typography.Text type="secondary">Inventory and purchase management</Typography.Text>
-        </Flex>
-
-        <LoginForm />
-      </Card>
-    </Flex>
+    <AuthLayout
+      icon={<LockOutlined />}
+      title="Welcome Back!"
+      subtitle="Sign in to continue to your account"
+    >
+      <LoginForm />
+    </AuthLayout>
   );
 };
