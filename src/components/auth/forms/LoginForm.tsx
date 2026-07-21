@@ -1,6 +1,6 @@
-import { Alert, Button, Form, Input } from 'antd';
+import { Alert, Button, Flex, Form, Input, Typography } from 'antd';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth/authStore';
 import { loginSchema, type LoginValues } from '@/schemas/auth/login.schema';
 import { zodRules } from '@/utils/common/formRules';
@@ -42,7 +42,7 @@ export const LoginForm = (): JSX.Element => {
         name="identifier"
         label="Username"
         rules={[...rules.identifier]}
-        extra="Accounts created in the dashboard sign in with their email address."
+        extra="The super admin signs in with their email address."
       >
         <Input
           prefix={<UserOutlined />}
@@ -64,6 +64,11 @@ export const LoginForm = (): JSX.Element => {
       <Button type="primary" htmlType="submit" loading={signingIn} block>
         Sign in
       </Button>
+
+      <Flex justify="center" gap={4} style={{ marginTop: 16 }}>
+        <Typography.Text type="secondary">No account yet?</Typography.Text>
+        <Link to={ROUTE_PATHS.register}>Request access</Link>
+      </Flex>
     </Form>
   );
 };

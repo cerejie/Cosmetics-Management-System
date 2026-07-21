@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import * as usersService from '@/services/users/users.service';
 import { getErrorMessage } from '@/api/common/apiError';
 import type { AsyncStatus } from '@/types/common/api.types';
-import type { AppRole } from '@/types/common/database.types';
+import type { AppRole, ApprovalStatus } from '@/types/common/database.types';
 import type { ManagedUser } from '@/types/users/users.types';
 import type { CreateUserValues } from '@/schemas/users/user.schema';
 
@@ -12,12 +12,21 @@ interface UserState {
   readonly error: string | null;
   readonly saving: boolean;
   readonly formOpen: boolean;
+  /** The account whose password is being reset, or null when that modal is closed. */
+  readonly passwordTarget: ManagedUser | null;
 
   readonly loadUsers: () => Promise<void>;
   readonly openCreateForm: () => void;
   readonly closeForm: () => void;
+  readonly openPasswordForm: (user: ManagedUser) => void;
+  readonly closePasswordForm: () => void;
   readonly createUser: (values: CreateUserValues) => Promise<void>;
   readonly setUserRole: (userId: string, role: AppRole, isActive: boolean) => Promise<void>;
+  readonly setUserApproval: (
+    userId: string,
+    status: Exclude<ApprovalStatus, 'pending'>,
+  ) => Promise<void>;
+  readonly setUserPassword: (userId: string, password: string) => Promise<void>;
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
@@ -26,6 +35,7 @@ export const useUserStore = create<UserState>((set, get) => ({
   error: null,
   saving: false,
   formOpen: false,
+  passwordTarget: null,
 
   loadUsers: async () => {
     set({ status: 'loading', error: null });
@@ -38,6 +48,8 @@ export const useUserStore = create<UserState>((set, get) => ({
 
   openCreateForm: () => set({ formOpen: true }),
   closeForm: () => set({ formOpen: false }),
+  openPasswordForm: (user) => set({ passwordTarget: user }),
+  closePasswordForm: () => set({ passwordTarget: null }),
 
   createUser: async (values) => {
     set({ saving: true });
@@ -53,5 +65,20 @@ export const useUserStore = create<UserState>((set, get) => ({
   setUserRole: async (userId, role, isActive) => {
     await usersService.setUserRole(userId, role, isActive);
     await get().loadUsers();
+  },
+
+  setUserApproval: async (userId, status) => {
+    await usersService.setUserApproval(userId, status);
+    await get().loadUsers();
+  },
+
+  setUserPassword: async (userId, password) => {
+    set({ saving: true });
+    try {
+      await usersService.setUserPassword(userId, password);
+      set({ passwordTarget: null });
+    } finally {
+      set({ saving: false });
+    }
   },
 }));

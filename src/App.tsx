@@ -4,16 +4,15 @@ import { BrowserRouter } from 'react-router-dom';
 import { AppRoutes } from '@/routes/AppRoutes';
 import { antdTheme } from '@/styles/antdTheme';
 import { useAuthStore } from '@/store/auth/authStore';
-import { onAuthStateChange } from '@/services/auth/auth.service';
 import '@/styles/global.css';
 
 export const App = (): JSX.Element => {
   const initialise = useAuthStore((state) => state.initialise);
 
+  // Revalidates whatever session was restored from storage: a custom token may
+  // have expired, or the account may have been disabled since it was issued.
   useEffect(() => {
     void initialise();
-    // Keeps the app in sync when the session is refreshed or revoked elsewhere.
-    return onAuthStateChange(() => void initialise());
   }, [initialise]);
 
   return (

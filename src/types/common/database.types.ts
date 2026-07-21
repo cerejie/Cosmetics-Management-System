@@ -4,6 +4,7 @@
  */
 
 export type AppRole = 'superadmin' | 'admin' | 'employee';
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 export type StockMovementType = 'purchase' | 'adjustment' | 'sale' | 'sale_reversal';
 export type SaleStatus = 'completed' | 'voided';
 export type PaymentMethod = 'cash' | 'card' | 'gcash' | 'bank_transfer';
@@ -15,6 +16,7 @@ export interface UserRow {
   readonly full_name: string;
   readonly role: AppRole;
   readonly is_active: boolean;
+  readonly approval_status: ApprovalStatus;
   readonly created_at: string;
   readonly updated_at: string;
 }

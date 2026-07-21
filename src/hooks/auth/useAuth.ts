@@ -1,5 +1,11 @@
 import { useAuthStore } from '@/store/auth/authStore';
-import { CREATABLE_ROLES, isAdminRole, type AppRole, type AppUser } from '@/types/auth/auth.types';
+import {
+  CREATABLE_ROLES,
+  isAdminRole,
+  type AppRole,
+  type AppUser,
+  type CreatableRole,
+} from '@/types/auth/auth.types';
 
 interface UseAuthResult {
   readonly user: AppUser | null;
@@ -9,7 +15,7 @@ interface UseAuthResult {
   readonly isAdmin: boolean;
   readonly isAuthenticated: boolean;
   /** Roles this user is allowed to create; empty for employees. */
-  readonly creatableRoles: readonly AppRole[];
+  readonly creatableRoles: readonly CreatableRole[];
   readonly canManageUsers: boolean;
 }
 

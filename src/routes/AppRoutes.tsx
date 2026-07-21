@@ -4,6 +4,7 @@ import { RequireAuth } from '@/components/common/guards/RequireAuth';
 import { RequireAdmin } from '@/components/common/guards/RequireAdmin';
 import { RequireUserManager } from '@/components/common/guards/RequireUserManager';
 import { LoginPage } from '@/pages/auth/LoginPage';
+import { RegisterPage } from '@/pages/auth/RegisterPage';
 import { DashboardPage } from '@/pages/dashboard/DashboardPage';
 import { ProductsPage } from '@/pages/inventory/ProductsPage';
 import { CategoriesPage } from '@/pages/inventory/CategoriesPage';
@@ -17,6 +18,7 @@ import { ROUTE_PATHS } from '@/config/routes';
 export const AppRoutes = (): JSX.Element => (
   <Routes>
     <Route path={ROUTE_PATHS.login} element={<LoginPage />} />
+    <Route path={ROUTE_PATHS.register} element={<RegisterPage />} />
 
     <Route element={<RequireAuth />}>
       <Route element={<AppLayout />}>
