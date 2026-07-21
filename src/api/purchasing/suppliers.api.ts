@@ -19,6 +19,8 @@ export interface SaveSupplierPayload {
   readonly phone: string;
   readonly email: string;
   readonly address: string;
+  readonly tin: string;
+  readonly paymentTerms: string;
   readonly note: string;
 }
 
@@ -28,6 +30,8 @@ const toRow = (payload: SaveSupplierPayload) => ({
   phone: payload.phone,
   email: payload.email,
   address: payload.address,
+  tin: payload.tin,
+  payment_terms: payload.paymentTerms,
   note: payload.note,
 });
 

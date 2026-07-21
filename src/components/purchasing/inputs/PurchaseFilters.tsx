@@ -22,76 +22,82 @@ export const PurchaseFilters = (): JSX.Element => {
     search !== '' || supplierFilter !== null || categoryFilter !== null || dateRange !== null;
 
   return (
-    <Row gutter={[12, 12]} align="bottom" style={{ marginBottom: 16 }}>
-      <Col xs={24} md={12} lg={7}>
-        <Form.Item label="Search product or supplier" style={{ marginBottom: 0 }}>
-          <Input
-            size="large"
-            allowClear
-            prefix={<SearchOutlined />}
-            placeholder="Type a product or supplier name"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </Form.Item>
-      </Col>
-
-      <Col xs={24} md={12} lg={7}>
-        <Form.Item label="Date range" style={{ marginBottom: 0 }}>
-          <DatePicker.RangePicker
-            size="large"
-            style={{ width: '100%' }}
-            format="DD MMM YYYY"
-            value={dateRange ? [dayjs(dateRange[0]), dayjs(dateRange[1])] : null}
-            onChange={(range) =>
-              setDateRange(
-                range?.[0] && range?.[1]
-                  ? [range[0].format('YYYY-MM-DD'), range[1].format('YYYY-MM-DD')]
-                  : null,
-              )
-            }
-          />
-        </Form.Item>
-      </Col>
-
-      <Col xs={24} md={12} lg={5}>
-        <Form.Item label="Supplier" style={{ marginBottom: 0 }}>
-          <Select
-            size="large"
-            allowClear
-            style={{ width: '100%' }}
-            placeholder="All suppliers"
-            value={supplierFilter}
-            onChange={(value: string | undefined) => setSupplierFilter(value ?? null)}
-            options={suppliers.map((supplier) => ({ label: supplier.name, value: supplier.id }))}
-          />
-        </Form.Item>
-      </Col>
-
-      <Col xs={24} md={12} lg={5}>
-        <Form.Item label="Category" style={{ marginBottom: 0 }}>
-          <Select
-            size="large"
-            allowClear
-            style={{ width: '100%' }}
-            placeholder="All categories"
-            value={categoryFilter}
-            onChange={(value: string | undefined) => setCategoryFilter(value ?? null)}
-            options={categories.map((category) => ({
-              label: category.name,
-              value: category.id,
-            }))}
-          />
-        </Form.Item>
-      </Col>
-
-      {hasFilters && (
-        <Col xs={24}>
-          <Button size="large" onClick={clearFilters}>
-            Clear filters
-          </Button>
+    // A bare Form.Item falls back to the horizontal layout, which put each
+    // label inline with a trailing colon and squeezed the controls. These are
+    // filters, not a form to submit, so `component={false}` keeps the labels
+    // stacked without adding a <form> element to the page.
+    <Form layout="vertical" component={false}>
+      <Row gutter={[12, 12]} align="bottom" style={{ marginBottom: 16 }}>
+        <Col xs={24} md={12} lg={7}>
+          <Form.Item label="Search product or supplier" style={{ marginBottom: 0 }}>
+            <Input
+              size="large"
+              allowClear
+              prefix={<SearchOutlined />}
+              placeholder="Type a product or supplier name"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </Form.Item>
         </Col>
-      )}
-    </Row>
+
+        <Col xs={24} md={12} lg={7}>
+          <Form.Item label="Date range" style={{ marginBottom: 0 }}>
+            <DatePicker.RangePicker
+              size="large"
+              style={{ width: '100%' }}
+              format="DD MMM YYYY"
+              value={dateRange ? [dayjs(dateRange[0]), dayjs(dateRange[1])] : null}
+              onChange={(range) =>
+                setDateRange(
+                  range?.[0] && range?.[1]
+                    ? [range[0].format('YYYY-MM-DD'), range[1].format('YYYY-MM-DD')]
+                    : null,
+                )
+              }
+            />
+          </Form.Item>
+        </Col>
+
+        <Col xs={24} md={12} lg={5}>
+          <Form.Item label="Supplier" style={{ marginBottom: 0 }}>
+            <Select
+              size="large"
+              allowClear
+              style={{ width: '100%' }}
+              placeholder="All suppliers"
+              value={supplierFilter}
+              onChange={(value: string | undefined) => setSupplierFilter(value ?? null)}
+              options={suppliers.map((supplier) => ({ label: supplier.name, value: supplier.id }))}
+            />
+          </Form.Item>
+        </Col>
+
+        <Col xs={24} md={12} lg={5}>
+          <Form.Item label="Category" style={{ marginBottom: 0 }}>
+            <Select
+              size="large"
+              allowClear
+              style={{ width: '100%' }}
+              placeholder="All categories"
+              value={categoryFilter}
+              onChange={(value: string | undefined) => setCategoryFilter(value ?? null)}
+              options={categories.map((category) => ({
+                label: category.name,
+                value: category.id,
+              }))}
+            />
+          </Form.Item>
+        </Col>
+
+        {hasFilters && (
+          <Col xs={24}>
+            <Button size="large" onClick={clearFilters}>
+              Clear filters
+            </Button>
+          </Col>
+        )}
+      </Row>
+    </Form>
   );
 };

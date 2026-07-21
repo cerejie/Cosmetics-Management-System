@@ -2,7 +2,11 @@ import { Button, Descriptions, Flex, Modal, Table, Typography } from 'antd';
 import { PrinterOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { usePurchaseStore } from '@/store/purchasing/purchaseStore';
+import { useSupplierStore } from '@/store/purchasing/supplierStore';
+import { useStoreProfileStore } from '@/store/settings/storeProfileStore';
 import { formatCurrency, formatDate, formatNumber } from '@/utils/common/format';
+import { printInvoice } from '@/utils/common/invoiceHtml';
+import { toPurchaseInvoice } from '@/utils/purchasing/purchaseInvoice';
 import type { PurchaseItem } from '@/types/purchasing/purchasing.types';
 
 const columns: ColumnsType<PurchaseItem> = [
@@ -47,6 +51,15 @@ const columns: ColumnsType<PurchaseItem> = [
 export const PurchaseDetailModal = (): JSX.Element => {
   const purchase = usePurchaseStore((state) => state.detailPurchase);
   const closeDetail = usePurchaseStore((state) => state.closeDetail);
+  const suppliers = useSupplierStore((state) => state.suppliers);
+  const profile = useStoreProfileStore((state) => state.profile);
+
+  const handlePrint = (): void => {
+    if (!purchase) return;
+
+    const supplier = suppliers.find((candidate) => candidate.id === purchase.supplierId) ?? null;
+    printInvoice(toPurchaseInvoice(purchase, supplier, profile));
+  };
 
   return (
     <Modal
@@ -57,8 +70,8 @@ export const PurchaseDetailModal = (): JSX.Element => {
       destroyOnHidden
       footer={
         <Flex justify="end" gap={8}>
-          <Button size="large" icon={<PrinterOutlined />} onClick={() => window.print()}>
-            Print
+          <Button size="large" icon={<PrinterOutlined />} onClick={handlePrint}>
+            Print invoice
           </Button>
           <Button size="large" type="primary" onClick={closeDetail}>
             Close

@@ -16,6 +16,8 @@ export const saveSupplier = async (
     phone: values.phone.trim(),
     email: values.email.trim(),
     address: values.address.trim(),
+    tin: values.tin.trim(),
+    paymentTerms: values.paymentTerms.trim(),
     note: values.note.trim(),
   };
 

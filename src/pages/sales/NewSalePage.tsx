@@ -7,7 +7,7 @@ import { OrderSummaryCard } from '@/components/sales/cards/OrderSummaryCard';
 import { ScanProductModal } from '@/components/sales/modals/ScanProductModal';
 import { useProductStore } from '@/store/inventory/productStore';
 import { useCategoryStore } from '@/store/inventory/categoryStore';
-import { useSalesStore } from '@/store/sales/salesStore';
+import { useCustomerStore } from '@/store/sales/customerStore';
 import { useCartStore } from '@/store/sales/cartStore';
 import { useMountEffect } from '@/hooks/common/useMountEffect';
 import { useHotkey } from '@/hooks/common/useHotkey';
@@ -16,7 +16,7 @@ import * as styles from './NewSalePage.css';
 export const NewSalePage = (): JSX.Element => {
   const loadProducts = useProductStore((state) => state.loadProducts);
   const loadCategories = useCategoryStore((state) => state.loadCategories);
-  const loadSales = useSalesStore((state) => state.loadSales);
+  const loadCustomers = useCustomerStore((state) => state.loadCustomers);
   const scanOpen = useCartStore((state) => state.scanOpen);
   const setScanOpen = useCartStore((state) => state.setScanOpen);
   const tipDismissed = useCartStore((state) => state.tipDismissed);
@@ -25,8 +25,8 @@ export const NewSalePage = (): JSX.Element => {
   useMountEffect(() => {
     void loadProducts();
     void loadCategories();
-    // Past sales only feed the customer-name suggestions.
-    void loadSales();
+    // Feeds the customer box: picking one fills in their contact and TIN.
+    void loadCustomers();
   });
 
   useHotkey('F2', () => setScanOpen(true), { enabled: !scanOpen });

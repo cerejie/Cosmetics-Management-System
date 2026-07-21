@@ -12,6 +12,9 @@ export interface Supplier {
   readonly phone: string;
   readonly email: string;
   readonly address: string;
+  /** Printed on purchase invoices and supplier statements. */
+  readonly tin: string;
+  readonly paymentTerms: string;
   readonly note: string;
   readonly createdAt: string;
 }
@@ -84,6 +87,8 @@ export const toSupplier = (row: SupplierRow): Supplier => ({
   phone: row.phone,
   email: row.email,
   address: row.address,
+  tin: row.tin,
+  paymentTerms: row.payment_terms,
   note: row.note,
   createdAt: row.created_at,
 });

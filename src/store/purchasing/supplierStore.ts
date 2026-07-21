@@ -4,6 +4,7 @@ import { getErrorMessage } from '@/api/common/apiError';
 import type { AsyncStatus } from '@/types/common/api.types';
 import type { Supplier } from '@/types/purchasing/purchasing.types';
 import type { SupplierFormValues } from '@/schemas/purchasing/supplier.schema';
+import type { DateRange } from '@/utils/reports/period';
 
 interface SupplierState {
   readonly suppliers: readonly Supplier[];
@@ -15,11 +16,19 @@ interface SupplierState {
   readonly formOpen: boolean;
   readonly editingSupplier: Supplier | null;
 
+  /** The supplier whose statement is being set up for printing, if any. */
+  readonly statementSupplier: Supplier | null;
+  readonly statementRange: DateRange | null;
+
   readonly loadSuppliers: () => Promise<void>;
   readonly setSearch: (search: string) => void;
   readonly openCreateForm: () => void;
   readonly openEditForm: (supplier: Supplier) => void;
   readonly closeForm: () => void;
+  /** The caller works the default period out from the supplier's purchases. */
+  readonly openStatement: (supplier: Supplier, range: DateRange) => void;
+  readonly setStatementRange: (range: DateRange) => void;
+  readonly closeStatement: () => void;
   readonly saveSupplier: (id: string | null, values: SupplierFormValues) => Promise<void>;
   readonly deleteSupplier: (id: string) => Promise<void>;
 }
@@ -33,6 +42,8 @@ export const useSupplierStore = create<SupplierState>((set, get) => ({
   search: '',
   formOpen: false,
   editingSupplier: null,
+  statementSupplier: null,
+  statementRange: null,
 
   loadSuppliers: async () => {
     set({ status: 'loading', error: null });
@@ -48,6 +59,10 @@ export const useSupplierStore = create<SupplierState>((set, get) => ({
   openCreateForm: () => set({ formOpen: true, editingSupplier: null }),
   openEditForm: (supplier) => set({ formOpen: true, editingSupplier: supplier }),
   closeForm: () => set({ formOpen: false, editingSupplier: null }),
+
+  openStatement: (statementSupplier, statementRange) => set({ statementSupplier, statementRange }),
+  setStatementRange: (statementRange) => set({ statementRange }),
+  closeStatement: () => set({ statementSupplier: null, statementRange: null }),
 
   saveSupplier: async (id, values) => {
     set({ saving: true });

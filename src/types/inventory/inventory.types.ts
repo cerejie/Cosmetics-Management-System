@@ -33,11 +33,42 @@ export interface StockMovement {
   readonly productId: string;
   readonly productName: string;
   readonly type: StockMovementType;
+  /** Signed: positive is stock in, negative is stock out. */
   readonly quantity: number;
+  /**
+   * Derived, not stored. The movement log records the level it left behind, and
+   * the level it started from is that minus the change — so the two are always
+   * consistent even if a movement is inserted out of order.
+   */
+  readonly quantityBefore: number;
   readonly quantityAfter: number;
   readonly reason: string;
   readonly createdAt: string;
 }
+
+export type StockDirection = 'in' | 'out';
+
+export const getStockDirection = (movement: StockMovement): StockDirection =>
+  movement.quantity >= 0 ? 'in' : 'out';
+
+export interface StockFlowSummary {
+  readonly stockIn: number;
+  readonly stockOut: number;
+  readonly net: number;
+}
+
+/** Stock in and stock out as positive figures, plus their difference. */
+export const summariseStockFlow = (
+  movements: readonly StockMovement[],
+): StockFlowSummary =>
+  movements.reduce<StockFlowSummary>(
+    (summary, movement) => ({
+      stockIn: summary.stockIn + Math.max(movement.quantity, 0),
+      stockOut: summary.stockOut + Math.max(-movement.quantity, 0),
+      net: summary.net + movement.quantity,
+    }),
+    { stockIn: 0, stockOut: 0, net: 0 },
+  );
 
 /** Row shape returned when products are selected with their category joined. */
 export type ProductRowWithCategory = ProductRow & {
@@ -49,6 +80,13 @@ export type StockMovementRowWithProduct = StockMovementRow & {
 };
 
 export type StockLevel = 'out_of_stock' | 'low_stock' | 'in_stock';
+
+/**
+ * What removing a product actually did. A product that appears in a sale,
+ * purchase, return or movement is part of the audit trail, so it is archived
+ * (deactivated) instead of deleted.
+ */
+export type ProductRemoval = 'deleted' | 'archived';
 
 export const getStockLevel = (product: Product): StockLevel => {
   if (product.stockQuantity <= 0) return 'out_of_stock';
@@ -83,6 +121,7 @@ export const toStockMovement = (row: StockMovementRowWithProduct): StockMovement
   productName: row.products?.name ?? 'Unknown product',
   type: row.type,
   quantity: row.quantity,
+  quantityBefore: row.quantity_after - row.quantity,
   quantityAfter: row.quantity_after,
   reason: row.reason,
   createdAt: row.created_at,

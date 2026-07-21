@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { Col, Form, Input, Row } from 'antd';
+import { MobileNumberInput } from '@/components/common/inputs/MobileNumberInput';
+import { TinInput } from '@/components/common/inputs/TinInput';
 import { supplierSchema, type SupplierFormValues } from '@/schemas/purchasing/supplier.schema';
 import { zodRules } from '@/utils/common/formRules';
 import type { Supplier } from '@/types/purchasing/purchasing.types';
@@ -19,6 +21,8 @@ const toInitialValues = (supplier: Supplier | null): SupplierFormValues => ({
   phone: supplier?.phone ?? '',
   email: supplier?.email ?? '',
   address: supplier?.address ?? '',
+  tin: supplier?.tin ?? '',
+  paymentTerms: supplier?.paymentTerms ?? '',
   note: supplier?.note ?? '',
 });
 
@@ -55,8 +59,8 @@ export const SupplierForm = ({ supplier, onSubmit }: SupplierFormProps): JSX.Ele
 
       <Row gutter={16}>
         <Col xs={24} sm={12}>
-          <Form.Item name="phone" label="Phone" rules={[...rules.phone]}>
-            <Input placeholder="+63 917 000 0000" />
+          <Form.Item name="phone" label="Mobile number" rules={[...rules.phone]}>
+            <MobileNumberInput />
           </Form.Item>
         </Col>
         <Col xs={24} sm={12}>
@@ -69,6 +73,24 @@ export const SupplierForm = ({ supplier, onSubmit }: SupplierFormProps): JSX.Ele
       <Form.Item name="address" label="Address" rules={[...rules.address]}>
         <Input placeholder="Unit 4, Ortigas Center, Pasig City" />
       </Form.Item>
+
+      <Row gutter={16}>
+        <Col xs={24} sm={12}>
+          <Form.Item
+            name="tin"
+            label="TIN"
+            rules={[...rules.tin]}
+            tooltip="Printed on purchase invoices and statements for this supplier."
+          >
+            <TinInput />
+          </Form.Item>
+        </Col>
+        <Col xs={24} sm={12}>
+          <Form.Item name="paymentTerms" label="Payment terms" rules={[...rules.paymentTerms]}>
+            <Input placeholder="30 days" />
+          </Form.Item>
+        </Col>
+      </Row>
 
       <Form.Item name="note" label="Notes (optional)" rules={[...rules.note]} style={{ marginBottom: 0 }}>
         <Input.TextArea rows={2} placeholder="Payment terms, delivery days…" />

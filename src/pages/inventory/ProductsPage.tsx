@@ -1,4 +1,4 @@
-import { Card } from 'antd';
+import { App, Card } from 'antd';
 import { PageHeader } from '@/components/common/feedback/PageHeader';
 import { ErrorState } from '@/components/common/feedback/ErrorState';
 import { ProductFilters } from '@/components/inventory/inputs/ProductFilters';
@@ -21,14 +21,29 @@ export const ProductsPage = (): JSX.Element => {
   const loadCategories = useCategoryStore((state) => state.loadCategories);
   const { isAdmin } = useAuth();
   const runAction = useAsyncAction();
+  const { message } = App.useApp();
 
   useMountEffect(() => {
     void loadProducts();
     void loadCategories();
   });
 
+  // The message depends on what the database decided, so it is built from the
+  // result rather than passed to runAction up front.
   const handleDelete = (product: Product): void => {
-    void runAction(() => deleteProduct(product.id), `${product.name} deleted.`);
+    void (async () => {
+      const result = await runAction(() => deleteProduct(product.id));
+      if (!result.ok) return;
+
+      if (result.data === 'archived') {
+        message.info(
+          `${product.name} appears in past records, so it was marked inactive instead of deleted.`,
+        );
+        return;
+      }
+
+      message.success(`${product.name} deleted.`);
+    })();
   };
 
   if (error) {

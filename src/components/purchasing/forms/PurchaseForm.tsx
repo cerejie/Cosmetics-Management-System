@@ -1,4 +1,17 @@
-import { Button, Card, Col, DatePicker, Flex, Form, Input, Row, Select, Typography } from 'antd';
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  DatePicker,
+  Descriptions,
+  Flex,
+  Form,
+  Input,
+  Row,
+  Select,
+  Typography,
+} from 'antd';
 import { CheckCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import dayjs, { type Dayjs } from 'dayjs';
 import { usePurchaseStore } from '@/store/purchasing/purchaseStore';
@@ -19,6 +32,17 @@ interface PurchaseFormFields {
   readonly note: string;
 }
 
+const cardTitle = (title: string, subtitle: string): JSX.Element => (
+  <Flex vertical gap={2}>
+    <Typography.Text strong style={{ fontSize: 18 }}>
+      {title}
+    </Typography.Text>
+    <Typography.Text type="secondary" style={{ fontSize: 14, fontWeight: 400 }}>
+      {subtitle}
+    </Typography.Text>
+  </Flex>
+);
+
 export const PurchaseForm = (): JSX.Element => {
   const [form] = Form.useForm<PurchaseFormFields>();
   const lines = usePurchaseStore((state) => state.draftLines);
@@ -28,6 +52,11 @@ export const PurchaseForm = (): JSX.Element => {
   const createPurchase = usePurchaseStore((state) => state.createPurchase);
   const suppliers = useSupplierStore((state) => state.suppliers);
   const runAction = useAsyncAction();
+
+  // Watched rather than read on submit: the supplier's invoice details are
+  // shown as soon as one is picked, so gaps are obvious before saving.
+  const supplierId = Form.useWatch('supplierId', form);
+  const supplier = suppliers.find((candidate) => candidate.id === supplierId) ?? null;
 
   const completeLines = lines.filter(isCompleteLine);
   const totals = getPurchaseTotals(completeLines);
@@ -57,25 +86,17 @@ export const PurchaseForm = (): JSX.Element => {
   };
 
   return (
-    <Card
-      variant="outlined"
-      title={
-        <Flex vertical gap={2}>
-          <Typography.Text strong style={{ fontSize: 18 }}>
-            Record a purchase
-          </Typography.Text>
-          <Typography.Text type="secondary" style={{ fontSize: 14, fontWeight: 400 }}>
-            Enter what you bought. Saving adds it to your stock.
-          </Typography.Text>
-        </Flex>
-      }
+    <Form<PurchaseFormFields>
+      form={form}
+      layout="vertical"
+      size="large"
+      requiredMark
+      initialValues={{ supplierId: undefined, purchaseDate: dayjs(), note: '' }}
     >
-      <Form<PurchaseFormFields>
-        form={form}
-        layout="vertical"
-        size="large"
-        requiredMark
-        initialValues={{ supplierId: undefined, purchaseDate: dayjs(), note: '' }}
+      <Card
+        variant="outlined"
+        style={{ marginBottom: 16 }}
+        title={cardTitle('Supplier and delivery', 'Who you bought from, and when it arrived.')}
       >
         <Row gutter={16}>
           <Col xs={24} md={12}>
@@ -84,9 +105,9 @@ export const PurchaseForm = (): JSX.Element => {
                 showSearch
                 optionFilterProp="label"
                 placeholder="Choose a supplier"
-                options={suppliers.map((supplier) => ({
-                  label: supplier.name,
-                  value: supplier.id,
+                options={suppliers.map((candidate) => ({
+                  label: candidate.name,
+                  value: candidate.id,
                 }))}
                 notFoundContent="Add a supplier on the Suppliers tab first"
               />
@@ -103,10 +124,44 @@ export const PurchaseForm = (): JSX.Element => {
           </Col>
         </Row>
 
-        <Typography.Text strong style={{ display: 'block', marginBottom: 8, fontSize: 16 }}>
-          What did you buy?
-        </Typography.Text>
+        {supplier && (
+          <>
+            <Descriptions
+              size="small"
+              bordered
+              column={{ xs: 1, sm: 2 }}
+              title="Details printed on the invoice"
+            >
+              <Descriptions.Item label="Contact person">
+                {supplier.contactPerson || '—'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Contact number">{supplier.phone || '—'}</Descriptions.Item>
+              <Descriptions.Item label="TIN">{supplier.tin || '—'}</Descriptions.Item>
+              <Descriptions.Item label="Payment terms">
+                {supplier.paymentTerms || '—'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Address" span={2}>
+                {supplier.address || '—'}
+              </Descriptions.Item>
+            </Descriptions>
 
+            {!supplier.tin && (
+              <Alert
+                type="warning"
+                showIcon
+                style={{ marginTop: 12 }}
+                message="This supplier has no TIN on file"
+                description="Add it on the Suppliers tab so it appears on the printed purchase invoice."
+              />
+            )}
+          </>
+        )}
+      </Card>
+
+      <Card
+        variant="outlined"
+        title={cardTitle('What did you buy?', 'Saving adds these items to your stock.')}
+      >
         <PurchaseItemsTable />
 
         <Button
@@ -128,7 +183,7 @@ export const PurchaseForm = (): JSX.Element => {
           align="center"
           gap={16}
           wrap
-          style={{ padding: '16px 0', borderTop: '1px solid #e5e7eb' }}
+          style={{ padding: '16px 0 0', borderTop: '1px solid #e5e7eb' }}
         >
           <Flex vertical>
             <Typography.Text type="secondary">
@@ -156,7 +211,7 @@ export const PurchaseForm = (): JSX.Element => {
             </Button>
           </Flex>
         </Flex>
-      </Form>
-    </Card>
+      </Card>
+    </Form>
   );
 };

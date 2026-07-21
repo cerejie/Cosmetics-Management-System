@@ -7,9 +7,13 @@ import { ErrorState } from '@/components/common/feedback/ErrorState';
 import { SalesTable } from '@/components/sales/tables/SalesTable';
 import { SaleDetailModal } from '@/components/sales/modals/SaleDetailModal';
 import { useSalesStore } from '@/store/sales/salesStore';
+import { useStoreProfileStore } from '@/store/settings/storeProfileStore';
 import { useMountEffect } from '@/hooks/common/useMountEffect';
 import { filterSales } from '@/utils/sales/salesMetrics';
+import { printInvoice } from '@/utils/common/invoiceHtml';
+import { toSaleInvoice } from '@/utils/sales/saleInvoice';
 import { ROUTE_PATHS } from '@/config/routes';
+import type { Sale } from '@/types/sales/sales.types';
 
 export const SalesHistoryPage = (): JSX.Element => {
   const sales = useSalesStore((state) => state.sales);
@@ -19,13 +23,21 @@ export const SalesHistoryPage = (): JSX.Element => {
   const setSearch = useSalesStore((state) => state.setSearch);
   const loadSales = useSalesStore((state) => state.loadSales);
   const openDetail = useSalesStore((state) => state.openDetail);
+  const profile = useStoreProfileStore((state) => state.profile);
+  const ensureProfile = useStoreProfileStore((state) => state.ensureProfile);
   const navigate = useNavigate();
 
   useMountEffect(() => {
     void loadSales();
+    // The invoice's letterhead.
+    void ensureProfile();
   });
 
   const filtered = useMemo(() => filterSales(sales, search), [sales, search]);
+
+  const handlePrint = (sale: Sale): void => {
+    printInvoice(toSaleInvoice(sale, profile));
+  };
 
   if (error) {
     return <ErrorState message={error} onRetry={() => void loadSales()} />;
@@ -59,7 +71,12 @@ export const SalesHistoryPage = (): JSX.Element => {
           />
         </Flex>
 
-        <SalesTable sales={filtered} loading={status === 'loading'} onViewDetail={openDetail} />
+        <SalesTable
+          sales={filtered}
+          loading={status === 'loading'}
+          onViewDetail={openDetail}
+          onPrint={handlePrint}
+        />
       </Card>
 
       <SaleDetailModal />

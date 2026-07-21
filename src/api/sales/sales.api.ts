@@ -21,9 +21,32 @@ export const fetchSales = async (limit = 200): Promise<readonly SaleRowWithRelat
   return data ?? [];
 };
 
+/**
+ * Reports ask for a period rather than the most recent N, so this one is
+ * bounded by dates and not by a row count. `created_at` is a timestamptz and
+ * the range is calendar days, so the bounds are the caller's local midnights.
+ */
+export const fetchSalesInRange = async (
+  fromInstant: string,
+  toInstant: string,
+): Promise<readonly SaleRowWithRelations[]> => {
+  const { data, error } = await supabase
+    .from('sales')
+    .select(SALE_SELECT)
+    .gte('created_at', fromInstant)
+    .lte('created_at', toInstant)
+    .order('created_at', { ascending: false })
+    .returns<SaleRowWithRelations[]>();
+
+  if (error) throw toApiError(error, 'Unable to load sales for that period.');
+  return data ?? [];
+};
+
 export interface CreateSalePayload {
   readonly items: readonly { readonly product_id: string; readonly quantity: number }[];
   readonly customerName: string;
+  readonly customerContact: string;
+  readonly customerTin: string;
   readonly paymentMethod: PaymentMethod;
   readonly discountAmount: number;
   readonly note: string;
@@ -42,6 +65,8 @@ export const createSale = async (payload: CreateSalePayload): Promise<SaleRow> =
     p_payment_method: payload.paymentMethod,
     p_discount_amount: payload.discountAmount,
     p_note: payload.note,
+    p_customer_contact: payload.customerContact,
+    p_customer_tin: payload.customerTin,
   });
 
   if (error) throw toApiError(error, 'Unable to record the purchase.');

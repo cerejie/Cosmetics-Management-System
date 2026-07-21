@@ -1,4 +1,5 @@
-import { Button, Space, Table, Typography } from 'antd';
+import { Button, Space, Table, Tooltip, Typography } from 'antd';
+import { PrinterOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { formatCurrency, formatDate, formatNumber } from '@/utils/common/format';
 import { EmptyState } from '@/components/common/feedback/EmptyState';
@@ -13,12 +14,14 @@ interface PurchaseHistoryTableProps {
   readonly purchases: readonly Purchase[];
   readonly loading: boolean;
   readonly onView: (purchase: Purchase) => void;
+  readonly onPrint: (purchase: Purchase) => void;
 }
 
 export const PurchaseHistoryTable = ({
   purchases,
   loading,
   onView,
+  onPrint,
 }: PurchaseHistoryTableProps): JSX.Element => {
   const columns: ColumnsType<Purchase> = [
     {
@@ -86,11 +89,21 @@ export const PurchaseHistoryTable = ({
       title: '',
       key: 'actions',
       align: 'right',
-      width: 100,
+      width: 150,
       render: (_, purchase) => (
-        <Button type="link" onClick={() => onView(purchase)}>
-          View
-        </Button>
+        <Space size="small">
+          <Tooltip title="Print invoice">
+            <Button
+              type="text"
+              icon={<PrinterOutlined />}
+              onClick={() => onPrint(purchase)}
+              aria-label={`Print invoice ${purchase.reference}`}
+            />
+          </Tooltip>
+          <Button type="link" onClick={() => onView(purchase)}>
+            View
+          </Button>
+        </Space>
       ),
     },
   ];

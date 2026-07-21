@@ -5,6 +5,7 @@ export const ROUTE_PATHS = {
   sales: {
     list: '/sales',
     newSale: '/sales/new',
+    customers: '/sales/customers',
     analytics: '/sales/analytics',
   },
   /** Supplier-side restocking — the only way stock enters the business. */
@@ -23,10 +24,9 @@ export const ROUTE_PATHS = {
   },
   reports: {
     sales: '/reports/sales',
-    revenue: '/reports/revenue',
     inventory: '/reports/inventory',
-    profitLoss: '/reports/profit-loss',
   },
   users: '/users',
+  /** Store profile — the letterhead every printed document uses. */
   settings: '/settings',
 } as const;

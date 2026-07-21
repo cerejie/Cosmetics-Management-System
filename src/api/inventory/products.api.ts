@@ -1,7 +1,7 @@
 import { supabase } from '@/api/common/supabaseClient';
 import { toApiError } from '@/api/common/apiError';
 import type { ProductRow } from '@/types/common/database.types';
-import type { ProductRowWithCategory } from '@/types/inventory/inventory.types';
+import type { ProductRemoval, ProductRowWithCategory } from '@/types/inventory/inventory.types';
 
 const PRODUCT_SELECT = '*, categories ( id, name )';
 
@@ -52,7 +52,15 @@ export const saveProduct = async (payload: SaveProductPayload): Promise<ProductR
   return data as ProductRow;
 };
 
-export const deleteProduct = async (id: string): Promise<void> => {
-  const { error } = await supabase.from('products').delete().eq('id', id);
-  if (error) throw toApiError(error, 'Unable to delete the product.');
+/**
+ * Sales, purchases, returns and stock movements all reference products, so a
+ * plain DELETE raised a foreign key error the moment a product had ever been
+ * sold. The RPC decides: no history means a real delete, otherwise the product
+ * is deactivated and the audit trail stays intact.
+ */
+export const deleteProduct = async (id: string): Promise<ProductRemoval> => {
+  const { data, error } = await supabase.rpc('delete_product', { p_id: id });
+
+  if (error) throw toApiError(error, 'Unable to remove the product.');
+  return data === 'archived' ? 'archived' : 'deleted';
 };

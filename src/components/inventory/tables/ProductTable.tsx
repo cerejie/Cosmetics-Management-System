@@ -109,8 +109,8 @@ export const ProductTable = ({
             />
           </Tooltip>
           <Popconfirm
-            title="Delete this product?"
-            description="Products used in past purchases cannot be deleted."
+            title="Remove this product?"
+            description="If it appears in past sales or purchases it is marked inactive instead, so those records stay readable."
             okText="Delete"
             okButtonProps={{ danger: true }}
             onConfirm={() => onDelete(product)}

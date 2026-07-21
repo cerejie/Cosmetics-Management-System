@@ -15,8 +15,9 @@ Inventory and sales management for a cosmetics retail business.
 ## Architecture — hybrid type-based
 
 Top level is organised by technical type. Inside each, by business module
-(`common`, `auth`, `inventory`, `sales`, `purchasing`, `dashboard`). Inside module folders,
-by category (`forms`, `tables`, `modals`, `cards`, `charts`, `inputs`, …).
+(`common`, `auth`, `inventory`, `sales`, `purchasing`, `dashboard`, `reports`,
+`settings`). Inside module folders, by category (`forms`, `tables`, `modals`,
+`cards`, `charts`, `inputs`, …).
 
 ```
 src/
@@ -44,6 +45,41 @@ Never skip a layer; components must not import from `api/`.
 - UI state lives in the module's store, not in components.
 - Mutations go through `useAsyncAction()` so toasts stay consistent.
 - New forms: define a zod schema in `schemas/`, then `zodRules(schema.shape)`.
+- Mobile numbers and TINs are captured with `MobileNumberInput` /
+  `TinInput`, never a bare `Input`. They mask as you type and store one shape
+  — `+63 917 123 4567` and `000-000-000-000` — so invoices print the value
+  straight out of the database. Validate with `schemas/common/contact.schema`.
+- A form's `onFinish` argument only carries fields that have a `Form.Item`.
+  Values that live in `initialValues` alone are **not** in it — parse
+  `form.getFieldsValue(true)` instead, or the schema will reject them as
+  missing and the submit will silently do nothing.
+
+## Printing
+
+Printed documents are built as a standalone HTML string and rendered in a
+hidden iframe (`utils/common/print.ts`), never with `window.print()` — that
+would print the whole application, and taming it with `@media print` would put
+knowledge of every screen into the app's stylesheet.
+
+`types/common/invoice.types.ts` defines one `InvoiceDocument` shape; sales,
+purchases and supplier statements each have a pure builder that produces one,
+and `utils/common/invoiceHtml.ts` is the only renderer. Add a document by
+writing a builder, not a second renderer. Reports print through
+`utils/reports/reportPrint.ts`, which takes pre-formatted strings.
+
+Every printed page carries the store profile as its letterhead, so any screen
+that prints calls `useStoreProfileStore().ensureProfile()` on mount.
+
+## Reports
+
+`Daily | Weekly | Monthly | Annually | Date range` — the named periods all mean
+the current one (today, this week, this month, this year). The range picks the
+bucket automatically (`bucketFor`): day up to a month, week up to four months,
+month beyond that, so no report is 365 unreadable rows.
+
+`reportStore` owns the period and fetches sales and movements together for it.
+Both report screens and Sales Analytics share it, so switching between them
+never silently changes the period being measured.
 
 ## Purchasing
 
@@ -54,10 +90,30 @@ receiving, and no per-line discount or tax. Do not reintroduce them.
 
 Products are created **only** from the purchase screen (the picker's "Add a new
 product"), so a delivery can contain something not yet on file. The Products
-page has no New Product button; it edits and deletes only.
+page has no New Product button; it edits and removes only.
 
 Returns are standalone: supplier + product + quantity + reason, not linked to a
 past purchase order.
+
+Suppliers carry TIN and payment terms because a purchase invoice is addressed
+to them. Their statement covers a period, chosen in a dialog before printing;
+it opens on the current month unless the supplier has nothing this month, in
+which case it widens to their whole history.
+
+## Customers
+
+There is a customers table, but nobody has to maintain it. `create_sale` finds
+or creates a customer from the name it is given and links the sale, so the list
+fills itself from ordinary selling. Rows created that way have only a name and
+show as **"no information yet"** until someone fills them in. A sale with no
+name is a walk-in and links to nothing.
+
+The sale keeps its **own copy** of the name, contact number and TIN. Renaming
+or correcting a customer must never change an invoice that is already printed,
+so those columns are a snapshot, not a lookup.
+
+Details typed at the till fill blanks on the customer record but never
+overwrite anything already curated on the Customers screen.
 
 ## Authentication — hybrid Supabase Auth + custom JWT
 
@@ -82,7 +138,7 @@ session, so RLS is the only authorisation layer.
 
 ## Database
 
-Migrations live in `supabase/migrations/`. Apply them in order (`0001` … `0005`)
+Migrations live in `supabase/migrations/`. Apply them in order (`0001` … `0006`)
 to a new project, then optionally `seed.sql`. **Migration 0004 is not complete
 without its manual steps** — setting `app.settings.jwt_secret` and disabling
 Auth sign-ups; they are listed at the bottom of that file.
@@ -102,11 +158,17 @@ RLS policies need. Nothing else may be granted there.
   `adjust_stock` is revoked from `authenticated` (migration 0005); the product
   screen is a catalogue. Do not add an "add stock" path to it.
 - Every stock change writes a `stock_movements` row. The audit trail must stay
-  complete.
+  complete. This is why **products are never hard-deleted once they have
+  history**: `delete_product` (migration 0006) archives a product that appears
+  in a sale, purchase, return or movement and only truly deletes an unused one.
+  Direct `delete` on `products` is revoked, so that RPC is the only path.
+- A movement's "on hand before" is derived (`quantity_after - quantity`), never
+  stored. Reports read opening and closing levels from the log itself, so a
+  report of a past period stays correct however much has happened since.
 - `create_sale` reads prices from the database; `create_purchase` recomputes
   every line total and `create_purchase_return` reads the cost from the product.
-  The client sends only quantities and unit costs — never a total it worked out
-  itself.
+  The client sends only quantities, unit costs and customer identity — never a
+  total it worked out itself.
 - `users.role` is not settable by the user. `register` always creates a *pending
   employee* and never reads a role from its arguments; changes go through
   `set_user_role`. Column grants (`grant update (full_name)`) enforce this,

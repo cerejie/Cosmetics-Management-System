@@ -1,4 +1,5 @@
-import { Button, Space, Table, Tag, Typography } from 'antd';
+import { Button, Space, Table, Tag, Tooltip, Typography } from 'antd';
+import { PrinterOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { PAYMENT_METHOD_LABELS } from '@/config/constants';
 import { formatCurrency, formatDateTime } from '@/utils/common/format';
@@ -14,9 +15,15 @@ interface SalesTableProps {
   readonly sales: readonly Sale[];
   readonly loading: boolean;
   readonly onViewDetail: (sale: Sale) => void;
+  readonly onPrint: (sale: Sale) => void;
 }
 
-export const SalesTable = ({ sales, loading, onViewDetail }: SalesTableProps): JSX.Element => {
+export const SalesTable = ({
+  sales,
+  loading,
+  onViewDetail,
+  onPrint,
+}: SalesTableProps): JSX.Element => {
   const columns: ColumnsType<Sale> = [
     {
       title: 'Reference',
@@ -89,7 +96,15 @@ export const SalesTable = ({ sales, loading, onViewDetail }: SalesTableProps): J
       key: 'actions',
       align: 'right',
       render: (_, sale) => (
-        <Space>
+        <Space size="small">
+          <Tooltip title="Print invoice">
+            <Button
+              type="text"
+              icon={<PrinterOutlined />}
+              onClick={() => onPrint(sale)}
+              aria-label={`Print invoice ${sale.reference}`}
+            />
+          </Tooltip>
           <Button type="link" onClick={() => onViewDetail(sale)}>
             View
           </Button>

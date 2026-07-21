@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { mobileNumberSchema, tinSchema } from '@/schemas/common/contact.schema';
 
 export const cartLineSchema = z.object({
   productId: z.string().uuid(),
@@ -8,6 +9,9 @@ export const cartLineSchema = z.object({
 /** What `create_sale` accepts. The discount always reaches the server in pesos. */
 export const saleSchema = z.object({
   customerName: z.string().max(120).default(''),
+  /** Both optional; printed on the receipt when they are given. */
+  customerContact: mobileNumberSchema,
+  customerTin: tinSchema,
   paymentMethod: z.enum(['cash', 'card', 'gcash', 'bank_transfer']),
   discountAmount: z
     .number({ invalid_type_error: 'Discount is required' })

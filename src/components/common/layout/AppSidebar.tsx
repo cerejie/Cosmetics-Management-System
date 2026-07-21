@@ -4,11 +4,10 @@ import {
   AppstoreOutlined,
   BarChartOutlined,
   ContainerOutlined,
-  DollarOutlined,
   FileDoneOutlined,
   FileTextOutlined,
-  FundOutlined,
   HomeOutlined,
+  IdcardOutlined,
   PlusCircleOutlined,
   RobotOutlined,
   SettingOutlined,
@@ -58,6 +57,7 @@ const SidebarNav = ({ onNavigate }: { readonly onNavigate?: () => void }): JSX.E
       ...group('Sales', [
         { key: ROUTE_PATHS.sales.newSale, icon: <PlusCircleOutlined />, label: 'New Sale' },
         { key: ROUTE_PATHS.sales.list, icon: <FileTextOutlined />, label: 'Sales History' },
+        { key: ROUTE_PATHS.sales.customers, icon: <IdcardOutlined />, label: 'Customers' },
         ...(isAdmin
           ? [{ key: ROUTE_PATHS.sales.analytics, icon: <BarChartOutlined />, label: 'Sales Analytics' }]
           : []),
@@ -110,13 +110,11 @@ const SidebarNav = ({ onNavigate }: { readonly onNavigate?: () => void }): JSX.E
         isAdmin
           ? [
               { key: ROUTE_PATHS.reports.sales, icon: <BarChartOutlined />, label: 'Sales Report' },
-              { key: ROUTE_PATHS.reports.revenue, icon: <DollarOutlined />, label: 'Revenue Report' },
               {
                 key: ROUTE_PATHS.reports.inventory,
                 icon: <ContainerOutlined />,
                 label: 'Inventory Report',
               },
-              { key: ROUTE_PATHS.reports.profitLoss, icon: <FundOutlined />, label: 'Profit & Loss' },
             ]
           : [],
       ),
@@ -126,7 +124,7 @@ const SidebarNav = ({ onNavigate }: { readonly onNavigate?: () => void }): JSX.E
           ? [{ key: ROUTE_PATHS.users, icon: <TeamOutlined />, label: 'Users' }]
           : []),
         ...(isAdmin
-          ? [{ key: ROUTE_PATHS.settings, icon: <SettingOutlined />, label: 'Settings' }]
+          ? [{ key: ROUTE_PATHS.settings, icon: <SettingOutlined />, label: 'Store Profile' }]
           : []),
       ]),
     ],

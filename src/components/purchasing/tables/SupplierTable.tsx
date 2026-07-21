@@ -1,5 +1,5 @@
-import { Button, Popconfirm, Space, Table, Typography } from 'antd';
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { Button, Popconfirm, Space, Table, Tooltip, Typography } from 'antd';
+import { DeleteOutlined, EditOutlined, PrinterOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { EmptyState } from '@/components/common/feedback/EmptyState';
 import {
@@ -14,6 +14,8 @@ interface SupplierTableProps {
   readonly loading: boolean;
   readonly onEdit: (supplier: Supplier) => void;
   readonly onDelete: (supplier: Supplier) => void;
+  /** Prints a statement of every purchase made from this supplier. */
+  readonly onPrint: (supplier: Supplier) => void;
 }
 
 export const SupplierTable = ({
@@ -21,6 +23,7 @@ export const SupplierTable = ({
   loading,
   onEdit,
   onDelete,
+  onPrint,
 }: SupplierTableProps): JSX.Element => {
   const columns: ColumnsType<Supplier> = [
     {
@@ -52,10 +55,17 @@ export const SupplierTable = ({
         email ? <a href={`mailto:${email}`}>{email}</a> : <Typography.Text type="secondary">—</Typography.Text>,
     },
     {
+      title: 'TIN',
+      dataIndex: 'tin',
+      key: 'tin',
+      responsive: ['lg'],
+      render: (tin: string) => tin || <Typography.Text type="secondary">—</Typography.Text>,
+    },
+    {
       title: 'Address',
       dataIndex: 'address',
       key: 'address',
-      responsive: ['lg'],
+      responsive: ['xl'],
       render: (address: string) =>
         address || <Typography.Text type="secondary">—</Typography.Text>,
     },
@@ -63,9 +73,16 @@ export const SupplierTable = ({
       title: '',
       key: 'actions',
       align: 'right',
-      width: 190,
+      width: 230,
       render: (_, supplier) => (
         <Space size="small">
+          <Tooltip title="Print a statement of purchases from this supplier">
+            <Button
+              icon={<PrinterOutlined />}
+              onClick={() => onPrint(supplier)}
+              aria-label={`Print a statement for ${supplier.name}`}
+            />
+          </Tooltip>
           <Button icon={<EditOutlined />} onClick={() => onEdit(supplier)}>
             Edit
           </Button>

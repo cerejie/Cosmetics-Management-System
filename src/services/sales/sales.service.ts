@@ -12,6 +12,8 @@ export const createSale = async (
   const sale = await salesApi.createSale({
     items: lines.map((line) => ({ product_id: line.productId, quantity: line.quantity })),
     customerName: values.customerName.trim(),
+    customerContact: values.customerContact.trim(),
+    customerTin: values.customerTin.trim(),
     paymentMethod: values.paymentMethod,
     discountAmount: values.discountAmount,
     note: values.note.trim(),

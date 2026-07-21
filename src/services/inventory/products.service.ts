@@ -1,5 +1,5 @@
 import * as productsApi from '@/api/inventory/products.api';
-import { toProduct, type Product } from '@/types/inventory/inventory.types';
+import { toProduct, type Product, type ProductRemoval } from '@/types/inventory/inventory.types';
 import type { ProductFormValues } from '@/schemas/inventory/product.schema';
 
 export const listProducts = async (): Promise<readonly Product[]> =>
@@ -43,4 +43,5 @@ export const createProduct = async (values: ProductFormValues): Promise<Product>
   return toProduct({ ...row, categories: null });
 };
 
-export const deleteProduct = (id: string): Promise<void> => productsApi.deleteProduct(id);
+export const deleteProduct = (id: string): Promise<ProductRemoval> =>
+  productsApi.deleteProduct(id);

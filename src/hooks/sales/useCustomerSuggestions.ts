@@ -1,21 +1,31 @@
 import { useMemo } from 'react';
-import { useSalesStore } from '@/store/sales/salesStore';
+import { useCustomerStore } from '@/store/sales/customerStore';
+import type { Customer } from '@/types/sales/customers.types';
+
+export interface CustomerSuggestion {
+  /** AutoComplete matches on `value`, so it is the customer's name. */
+  readonly value: string;
+  readonly label: string;
+  readonly customer: Customer;
+}
 
 /**
- * Distinct customer names from previous sales, newest first. There is no
- * customers table — this only saves the cashier from retyping regulars.
+ * Customers on file, for the checkout name box. It stays an AutoComplete
+ * rather than a Select because a first-time customer is typed in freely —
+ * `create_sale` adds them to the list on the way through.
  */
-export const useCustomerSuggestions = (): readonly { readonly value: string }[] => {
-  const sales = useSalesStore((state) => state.sales);
+export const useCustomerSuggestions = (): readonly CustomerSuggestion[] => {
+  const customers = useCustomerStore((state) => state.customers);
 
-  return useMemo(() => {
-    const names = new Set<string>();
-
-    for (const sale of sales) {
-      const name = sale.customerName.trim();
-      if (name) names.add(name);
-    }
-
-    return [...names].map((value) => ({ value }));
-  }, [sales]);
+  return useMemo(
+    () =>
+      customers.map((customer) => ({
+        value: customer.name,
+        label: customer.contactNumber
+          ? `${customer.name} · ${customer.contactNumber}`
+          : customer.name,
+        customer,
+      })),
+    [customers],
+  );
 };

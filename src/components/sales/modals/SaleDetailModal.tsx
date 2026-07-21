@@ -1,4 +1,5 @@
 import {
+  Button,
   Descriptions,
   Divider,
   Flex,
@@ -8,13 +9,17 @@ import {
   Tag,
   Typography,
 } from 'antd';
+import { PrinterOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useSalesStore } from '@/store/sales/salesStore';
 import { useProductStore } from '@/store/inventory/productStore';
+import { useStoreProfileStore } from '@/store/settings/storeProfileStore';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { useAsyncAction } from '@/hooks/common/useAsyncAction';
 import { PAYMENT_METHOD_LABELS } from '@/config/constants';
 import { formatCurrency, formatDateTime } from '@/utils/common/format';
+import { printInvoice } from '@/utils/common/invoiceHtml';
+import { toSaleInvoice } from '@/utils/sales/saleInvoice';
 import type { SaleItem } from '@/types/sales/sales.types';
 
 const itemColumns: ColumnsType<SaleItem> = [
@@ -54,8 +59,13 @@ export const SaleDetailModal = (): JSX.Element => {
   const closeDetail = useSalesStore((state) => state.closeDetail);
   const voidSale = useSalesStore((state) => state.voidSale);
   const loadProducts = useProductStore((state) => state.loadProducts);
+  const profile = useStoreProfileStore((state) => state.profile);
   const { isAdmin } = useAuth();
   const runAction = useAsyncAction();
+
+  const handlePrint = (): void => {
+    if (sale) printInvoice(toSaleInvoice(sale, profile));
+  };
 
   const handleVoid = async (): Promise<void> => {
     if (!sale) return;
@@ -76,9 +86,18 @@ export const SaleDetailModal = (): JSX.Element => {
       title={sale ? `Purchase ${sale.reference}` : 'Purchase'}
       open={sale !== null}
       onCancel={closeDetail}
-      footer={null}
       width={720}
       destroyOnHidden
+      footer={
+        <Flex justify="end" gap={8}>
+          <Button icon={<PrinterOutlined />} onClick={handlePrint}>
+            Print invoice
+          </Button>
+          <Button type="primary" onClick={closeDetail}>
+            Close
+          </Button>
+        </Flex>
+      }
     >
       {sale && (
         <>
@@ -90,6 +109,10 @@ export const SaleDetailModal = (): JSX.Element => {
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Customer">{sale.customerName || 'Walk-in'}</Descriptions.Item>
+            <Descriptions.Item label="Contact number">
+              {sale.customerContact || '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Customer TIN">{sale.customerTin || '—'}</Descriptions.Item>
             <Descriptions.Item label="Payment">
               {PAYMENT_METHOD_LABELS[sale.paymentMethod]}
             </Descriptions.Item>

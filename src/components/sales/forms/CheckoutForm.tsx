@@ -7,9 +7,12 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { ShortcutHint } from '@/components/common/feedback/ShortcutHint';
+import { MobileNumberInput } from '@/components/common/inputs/MobileNumberInput';
+import { TinInput } from '@/components/common/inputs/TinInput';
 import { useCartStore } from '@/store/sales/cartStore';
 import { useSalesStore } from '@/store/sales/salesStore';
 import { useProductStore } from '@/store/inventory/productStore';
+import { useCustomerStore } from '@/store/sales/customerStore';
 import { useCart } from '@/hooks/sales/useCart';
 import { useCustomerSuggestions } from '@/hooks/sales/useCustomerSuggestions';
 import { useAsyncAction } from '@/hooks/common/useAsyncAction';
@@ -30,6 +33,8 @@ const DISCOUNT_MODE_OPTIONS: readonly { readonly label: string; readonly value: 
 
 const INITIAL_VALUES: SaleFormInput = {
   customerName: '',
+  customerContact: '',
+  customerTin: '',
   paymentMethod: 'cash',
   discountMode: 'percent',
   discountValue: 0,
@@ -45,6 +50,7 @@ export const CheckoutForm = (): JSX.Element => {
   const createSale = useSalesStore((state) => state.createSale);
   const submitting = useSalesStore((state) => state.submitting);
   const loadProducts = useProductStore((state) => state.loadProducts);
+  const loadCustomers = useCustomerStore((state) => state.loadCustomers);
   const customerOptions = useCustomerSuggestions();
   const runAction = useAsyncAction();
   const { message } = App.useApp();
@@ -62,6 +68,21 @@ export const CheckoutForm = (): JSX.Element => {
     return 'Add discount or note';
   })();
 
+  /**
+   * Choosing someone on file fills in the rest of their invoice details. A
+   * name that is only typed leaves them blank — `create_sale` then creates the
+   * customer, and whatever was typed here becomes their first details.
+   */
+  const handleCustomerSelect = (name: string): void => {
+    const match = customerOptions.find((option) => option.value === name);
+    if (!match) return;
+
+    form.setFieldsValue({
+      customerContact: match.customer.contactNumber,
+      customerTin: match.customer.tin,
+    });
+  };
+
   /** Keeps the dialog open on an invalid discount so the error stays visible. */
   const handleApplyExtras = async (): Promise<void> => {
     try {
@@ -76,6 +97,8 @@ export const CheckoutForm = (): JSX.Element => {
     const result = await runAction(() =>
       createSale(lines, {
         customerName: values.customerName,
+        customerContact: values.customerContact,
+        customerTin: values.customerTin,
         paymentMethod: values.paymentMethod,
         note: values.note,
         discountAmount: resolveDiscountAmount(values.discountMode, values.discountValue, subtotal),
@@ -83,10 +106,11 @@ export const CheckoutForm = (): JSX.Element => {
     );
     if (!result.ok) return;
 
-    // Stock changed server-side, so refresh the catalogue the picker reads from.
+    // Stock changed server-side, so refresh the catalogue the picker reads
+    // from — and the customer list, which the sale may have just added to.
     clearCart();
     form.resetFields();
-    await loadProducts();
+    await Promise.all([loadProducts(), loadCustomers()]);
     message.success(`Purchase ${result.data} recorded.`);
   };
 
@@ -103,9 +127,15 @@ export const CheckoutForm = (): JSX.Element => {
       disabled={isEmpty}
     >
       <div className={styles.fields}>
-        <Form.Item name="customerName" label="Customer" rules={[...rules.customerName]}>
+        <Form.Item
+          name="customerName"
+          label="Customer"
+          rules={[...rules.customerName]}
+          tooltip="Pick someone on file, or type a new name — they are added to your customers automatically."
+        >
           <AutoComplete
             options={[...customerOptions]}
+            onSelect={handleCustomerSelect}
             filterOption={(input, option) =>
               (option?.value ?? '').toLowerCase().includes(input.toLowerCase())
             }
@@ -115,6 +145,24 @@ export const CheckoutForm = (): JSX.Element => {
               placeholder="Walk-in customer"
             />
           </AutoComplete>
+        </Form.Item>
+
+        <Form.Item
+          name="customerContact"
+          label="Mobile number (optional)"
+          rules={[...rules.customerContact]}
+          tooltip="Printed on the invoice when the customer asks for one."
+        >
+          <MobileNumberInput />
+        </Form.Item>
+
+        <Form.Item
+          name="customerTin"
+          label="TIN (optional)"
+          rules={[...rules.customerTin]}
+          tooltip="Filled in automatically for a customer on file."
+        >
+          <TinInput />
         </Form.Item>
 
         <Form.Item name="paymentMethod" label="Payment method" rules={[...rules.paymentMethod]}>

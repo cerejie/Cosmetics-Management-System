@@ -6,9 +6,13 @@ import { PurchasingTabs } from '@/components/purchasing/layout/PurchasingTabs';
 import { SupplierTable } from '@/components/purchasing/tables/SupplierTable';
 import { SupplierFormModal } from '@/components/purchasing/modals/SupplierFormModal';
 import { useSupplierStore } from '@/store/purchasing/supplierStore';
+import { usePurchaseStore } from '@/store/purchasing/purchaseStore';
+import { useStoreProfileStore } from '@/store/settings/storeProfileStore';
 import { useFilteredSuppliers } from '@/hooks/purchasing/usePurchases';
 import { useMountEffect } from '@/hooks/common/useMountEffect';
 import { useAsyncAction } from '@/hooks/common/useAsyncAction';
+import { SupplierStatementModal } from '@/components/purchasing/modals/SupplierStatementModal';
+import { defaultStatementRange } from '@/utils/purchasing/purchaseInvoice';
 import type { Supplier } from '@/types/purchasing/purchasing.types';
 
 export const SuppliersPage = (): JSX.Element => {
@@ -21,14 +25,26 @@ export const SuppliersPage = (): JSX.Element => {
   const openCreateForm = useSupplierStore((state) => state.openCreateForm);
   const openEditForm = useSupplierStore((state) => state.openEditForm);
   const deleteSupplier = useSupplierStore((state) => state.deleteSupplier);
+  const openStatement = useSupplierStore((state) => state.openStatement);
+  const purchases = usePurchaseStore((state) => state.purchases);
+  const loadPurchases = usePurchaseStore((state) => state.loadPurchases);
+  const ensureProfile = useStoreProfileStore((state) => state.ensureProfile);
   const runAction = useAsyncAction();
 
   useMountEffect(() => {
     void loadSuppliers();
+    // Both feed the printed statement: the purchases are its lines and the
+    // profile is its letterhead.
+    void loadPurchases();
+    void ensureProfile();
   });
 
   const handleDelete = (supplier: Supplier): void => {
     void runAction(() => deleteSupplier(supplier.id), `${supplier.name} deleted.`);
+  };
+
+  const handlePrint = (supplier: Supplier): void => {
+    openStatement(supplier, defaultStatementRange(supplier.id, purchases));
   };
 
   if (error) {
@@ -67,10 +83,12 @@ export const SuppliersPage = (): JSX.Element => {
           loading={status === 'loading'}
           onEdit={openEditForm}
           onDelete={handleDelete}
+          onPrint={handlePrint}
         />
       </Card>
 
       <SupplierFormModal />
+      <SupplierStatementModal />
     </>
   );
 };

@@ -17,3 +17,20 @@ export const fetchStockMovements = async (
   if (error) throw toApiError(error, 'Unable to load stock movements.');
   return data ?? [];
 };
+
+/** Date-bounded rather than capped at N rows, for the inventory report. */
+export const fetchStockMovementsInRange = async (
+  fromInstant: string,
+  toInstant: string,
+): Promise<readonly StockMovementRowWithProduct[]> => {
+  const { data, error } = await supabase
+    .from('stock_movements')
+    .select(MOVEMENT_SELECT)
+    .gte('created_at', fromInstant)
+    .lte('created_at', toInstant)
+    .order('created_at', { ascending: false })
+    .returns<StockMovementRowWithProduct[]>();
+
+  if (error) throw toApiError(error, 'Unable to load stock movements for that period.');
+  return data ?? [];
+};

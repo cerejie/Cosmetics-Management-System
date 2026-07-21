@@ -61,10 +61,27 @@ export interface StockMovementRow {
   readonly created_at: string;
 }
 
+export interface CustomerRow {
+  readonly id: string;
+  readonly name: string;
+  readonly contact_person: string;
+  readonly contact_number: string;
+  readonly tin: string;
+  readonly address: string;
+  readonly email: string;
+  readonly note: string;
+  readonly created_at: string;
+  readonly updated_at: string;
+}
+
 export interface SaleRow {
   readonly id: string;
   readonly reference: string;
+  /** Null for a walk-in sale, or if the customer was later deleted. */
+  readonly customer_id: string | null;
   readonly customer_name: string;
+  readonly customer_contact: string;
+  readonly customer_tin: string;
   readonly status: SaleStatus;
   readonly payment_method: PaymentMethod;
   readonly subtotal: number;
@@ -95,8 +112,23 @@ export interface SupplierRow {
   readonly phone: string;
   readonly email: string;
   readonly address: string;
+  readonly tin: string;
+  readonly payment_terms: string;
   readonly note: string;
   readonly created_at: string;
+  readonly updated_at: string;
+}
+
+export interface StoreProfileRow {
+  readonly id: string;
+  readonly store_name: string;
+  readonly legal_name: string;
+  readonly tin: string;
+  readonly address: string;
+  readonly contact_number: string;
+  readonly email: string;
+  readonly website: string;
+  readonly invoice_footer: string;
   readonly updated_at: string;
 }
 

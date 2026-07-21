@@ -20,7 +20,15 @@ export interface SaleItem {
 export interface Sale {
   readonly id: string;
   readonly reference: string;
+  /** Null for a walk-in sale. */
+  readonly customerId: string | null;
+  /**
+   * A snapshot taken when the sale was recorded, not a lookup: renaming or
+   * correcting a customer must not change an invoice that is already printed.
+   */
   readonly customerName: string;
+  readonly customerContact: string;
+  readonly customerTin: string;
   readonly status: SaleStatus;
   readonly paymentMethod: PaymentMethod;
   readonly subtotal: number;
@@ -60,7 +68,10 @@ export const toSaleItem = (row: SaleItemRow): SaleItem => ({
 export const toSale = (row: SaleRowWithRelations): Sale => ({
   id: row.id,
   reference: row.reference,
+  customerId: row.customer_id,
   customerName: row.customer_name,
+  customerContact: row.customer_contact,
+  customerTin: row.customer_tin,
   status: row.status,
   paymentMethod: row.payment_method,
   subtotal: Number(row.subtotal),

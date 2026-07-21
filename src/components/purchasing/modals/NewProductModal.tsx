@@ -25,8 +25,12 @@ export const NewProductModal = (): JSX.Element => {
   const categories = useCategoryStore((state) => state.categories);
   const runAction = useAsyncAction();
 
-  const handleFinish = (values: ProductFormValues): void => {
-    const parsed = productSchema.safeParse(values);
+  const handleFinish = (): void => {
+    // getFieldsValue(true) rather than onFinish's argument: antd only reports
+    // fields that have a Form.Item, and brand, costPrice and isActive are
+    // initial values with no control. Parsing the argument dropped costPrice,
+    // the schema rejected it as missing, and the button silently did nothing.
+    const parsed = productSchema.safeParse(form.getFieldsValue(true));
     if (!parsed.success || lineKey === null) return;
 
     void (async () => {
