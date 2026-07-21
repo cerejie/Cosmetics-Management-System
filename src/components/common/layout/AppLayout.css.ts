@@ -1,4 +1,4 @@
-import { style } from '@vanilla-extract/css';
+import { globalStyle, style } from '@vanilla-extract/css';
 import { vars } from '@/styles/theme.css';
 
 export const layout = style({
@@ -37,7 +37,29 @@ export const navMenu = style({
   flex: 1,
   minHeight: 0,
   overflowY: 'auto',
-  paddingBottom: vars.space.sm,
+  paddingBottom: vars.space.md,
+});
+
+/**
+ * Section headers ("MAIN", "SALES", …). They carry the vertical rhythm between
+ * groups, so the gap lives on the title rather than on the groups themselves.
+ */
+globalStyle(`${navMenu} .ant-menu-item-group-title`, {
+  paddingInline: vars.space.md,
+  paddingBlock: `${vars.space.md} ${vars.space.xs}`,
+  fontWeight: 600,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+});
+
+globalStyle(`${navMenu} .ant-menu-item-group:first-child .ant-menu-item-group-title`, {
+  paddingBlockStart: 0,
+});
+
+/** The primary action sits above the nav, matching the brand block's padding. */
+export const cta = style({
+  flexShrink: 0,
+  padding: `0 ${vars.space.md} ${vars.space.md}`,
 });
 
 export const brand = style({
@@ -68,8 +90,12 @@ export const brandName = style({
   fontSize: vars.font.sizeBase,
   fontWeight: 600,
   letterSpacing: '-0.015em',
-  color: vars.color.primary,
+  color: vars.color.text,
   lineHeight: vars.font.lineTight,
+});
+
+export const brandNameAccent = style({
+  color: vars.color.primary,
 });
 
 export const account = style({

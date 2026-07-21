@@ -1,14 +1,22 @@
 import { useMemo } from 'react';
-import { Drawer, Layout, Menu, Typography } from 'antd';
+import { Button, Drawer, Layout, Menu } from 'antd';
 import {
-  DashboardOutlined,
-  ShoppingOutlined,
   AppstoreOutlined,
-  SwapOutlined,
+  BarChartOutlined,
+  ContainerOutlined,
+  DollarOutlined,
+  FileDoneOutlined,
   FileTextOutlined,
+  FundOutlined,
+  HomeOutlined,
+  LineChartOutlined,
   PlusCircleOutlined,
-  SkinOutlined,
+  SettingOutlined,
+  ShoppingCartOutlined,
+  SwapOutlined,
+  TagsOutlined,
   TeamOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { MenuProps } from 'antd';
@@ -16,20 +24,19 @@ import { ROUTE_PATHS } from '@/config/routes';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { useLayoutStore } from '@/store/common/layoutStore';
 import { SidebarAccount } from './SidebarAccount';
+import { BrandLogo } from './BrandLogo';
 import * as styles from './AppLayout.css';
 
 const { Sider } = Layout;
 
 const SIDEBAR_WIDTH = 248;
 
-const SidebarBrand = (): JSX.Element => (
-  <div className={styles.brand}>
-    <span className={styles.brandMark} aria-hidden>
-      <SkinOutlined />
-    </span>
-    <Typography.Text className={styles.brandName}>Cosmetics MS</Typography.Text>
-  </div>
-);
+type MenuItems = NonNullable<MenuProps['items']>;
+type MenuItem = MenuItems[number];
+
+/** A section header plus its links, dropped entirely when the role sees none. */
+const group = (label: string, children: MenuItems): readonly MenuItem[] =>
+  children.length > 0 ? [{ key: `group:${label}`, type: 'group', label, children }] : [];
 
 /** Brand, navigation and account — shared by the desktop rail and the drawer. */
 const SidebarNav = ({ onNavigate }: { readonly onNavigate?: () => void }): JSX.Element => {
@@ -37,56 +44,107 @@ const SidebarNav = ({ onNavigate }: { readonly onNavigate?: () => void }): JSX.E
   const { pathname } = useLocation();
   const { isAdmin, canManageUsers } = useAuth();
 
+  const go = (path: string): void => {
+    navigate(path);
+    onNavigate?.();
+  };
+
   const items = useMemo<MenuProps['items']>(
     () => [
-      { key: ROUTE_PATHS.dashboard, icon: <DashboardOutlined />, label: 'Dashboard' },
-      {
-        key: 'sales',
-        icon: <FileTextOutlined />,
-        label: 'Purchases',
-        children: [
-          { key: ROUTE_PATHS.sales.newSale, icon: <PlusCircleOutlined />, label: 'New purchase' },
-          { key: ROUTE_PATHS.sales.list, label: 'Purchase history' },
-        ],
-      },
-      {
-        key: 'inventory',
-        icon: <ShoppingOutlined />,
-        label: 'Inventory',
-        children: [
-          { key: ROUTE_PATHS.inventory.products, label: 'Products' },
-          ...(isAdmin
-            ? [
-                {
-                  key: ROUTE_PATHS.inventory.categories,
-                  icon: <AppstoreOutlined />,
-                  label: 'Categories',
-                },
-              ]
-            : []),
-          { key: ROUTE_PATHS.inventory.movements, icon: <SwapOutlined />, label: 'Stock movements' },
-        ],
-      },
-      ...(canManageUsers
-        ? [{ key: ROUTE_PATHS.users, icon: <TeamOutlined />, label: 'Users' }]
-        : []),
+      ...group('Main', [
+        { key: ROUTE_PATHS.dashboard, icon: <HomeOutlined />, label: 'Dashboard' },
+      ]),
+
+      ...group('Sales', [
+        { key: ROUTE_PATHS.sales.newSale, icon: <PlusCircleOutlined />, label: 'New Sale' },
+        { key: ROUTE_PATHS.sales.list, icon: <FileTextOutlined />, label: 'Sales History' },
+        ...(isAdmin
+          ? [{ key: ROUTE_PATHS.sales.analytics, icon: <BarChartOutlined />, label: 'Sales Analytics' }]
+          : []),
+      ]),
+
+      ...group(
+        'Purchasing',
+        isAdmin
+          ? [
+              {
+                key: ROUTE_PATHS.purchasing.newPurchase,
+                icon: <ShoppingCartOutlined />,
+                label: 'New Purchase',
+              },
+              {
+                key: ROUTE_PATHS.purchasing.list,
+                icon: <FileDoneOutlined />,
+                label: 'Purchase History',
+              },
+              {
+                key: ROUTE_PATHS.purchasing.reorderPrediction,
+                icon: <LineChartOutlined />,
+                label: 'Reorder Prediction',
+              },
+            ]
+          : [],
+      ),
+
+      ...group('Inventory', [
+        { key: ROUTE_PATHS.inventory.products, icon: <AppstoreOutlined />, label: 'Products' },
+        ...(isAdmin
+          ? [{ key: ROUTE_PATHS.inventory.categories, icon: <TagsOutlined />, label: 'Categories' }]
+          : []),
+        { key: ROUTE_PATHS.inventory.movements, icon: <SwapOutlined />, label: 'Stock Movements' },
+        { key: ROUTE_PATHS.inventory.lowStock, icon: <WarningOutlined />, label: 'Low Stock' },
+      ]),
+
+      ...group(
+        'Reports',
+        isAdmin
+          ? [
+              { key: ROUTE_PATHS.reports.sales, icon: <BarChartOutlined />, label: 'Sales Report' },
+              { key: ROUTE_PATHS.reports.revenue, icon: <DollarOutlined />, label: 'Revenue Report' },
+              {
+                key: ROUTE_PATHS.reports.inventory,
+                icon: <ContainerOutlined />,
+                label: 'Inventory Report',
+              },
+              { key: ROUTE_PATHS.reports.profitLoss, icon: <FundOutlined />, label: 'Profit & Loss' },
+            ]
+          : [],
+      ),
+
+      ...group('Administration', [
+        ...(canManageUsers
+          ? [{ key: ROUTE_PATHS.users, icon: <TeamOutlined />, label: 'Users' }]
+          : []),
+        ...(isAdmin
+          ? [{ key: ROUTE_PATHS.settings, icon: <SettingOutlined />, label: 'Settings' }]
+          : []),
+      ]),
     ],
     [isAdmin, canManageUsers],
   );
 
   return (
     <div className={styles.nav}>
-      <SidebarBrand />
+      <div className={styles.brand}>
+        <BrandLogo />
+      </div>
+
+      <div className={styles.cta}>
+        <Button
+          type="primary"
+          block
+          icon={<PlusCircleOutlined />}
+          onClick={() => go(ROUTE_PATHS.sales.newSale)}
+        >
+          New Sale
+        </Button>
+      </div>
 
       <Menu
         mode="inline"
         selectedKeys={[pathname]}
-        defaultOpenKeys={['sales', 'inventory']}
         items={items}
-        onClick={({ key }) => {
-          navigate(key);
-          onNavigate?.();
-        }}
+        onClick={({ key }) => go(key)}
         className={styles.navMenu}
         style={{ borderInlineEnd: 'none' }}
       />

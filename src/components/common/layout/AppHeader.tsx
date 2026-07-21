@@ -1,6 +1,7 @@
-import { Button, Layout, Typography } from 'antd';
-import { MenuOutlined, SkinOutlined } from '@ant-design/icons';
+import { Button, Layout } from 'antd';
+import { MenuOutlined } from '@ant-design/icons';
 import { useLayoutStore } from '@/store/common/layoutStore';
+import { BrandLogo } from './BrandLogo';
 import * as styles from './AppLayout.css';
 
 const { Header } = Layout;
@@ -21,10 +22,7 @@ export const AppHeader = (): JSX.Element => {
         aria-label="Open navigation"
       />
 
-      <span className={styles.brandMark} aria-hidden>
-        <SkinOutlined />
-      </span>
-      <Typography.Text className={styles.brandName}>Cosmetics MS</Typography.Text>
+      <BrandLogo />
     </Header>
   );
 };

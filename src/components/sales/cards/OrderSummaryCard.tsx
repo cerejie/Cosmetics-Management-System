@@ -3,6 +3,7 @@ import { ShoppingCartOutlined } from '@ant-design/icons';
 import { CartLineList } from '@/components/sales/lists/CartLineList';
 import { CheckoutForm } from '@/components/sales/forms/CheckoutForm';
 import { useCart } from '@/hooks/sales/useCart';
+import * as styles from './OrderSummaryCard.css';
 
 export const OrderSummaryCard = (): JSX.Element => {
   const { itemCount, isEmpty } = useCart();
@@ -10,6 +11,9 @@ export const OrderSummaryCard = (): JSX.Element => {
   return (
     <Card
       variant="outlined"
+      className={styles.card}
+      classNames={{ body: styles.cardBody }}
+      styles={{ header: { padding: '0 16px', minHeight: 48 }, body: { padding: '16px 16px 0' } }}
       title={
         <Space size="small">
           <ShoppingCartOutlined />
@@ -20,7 +24,7 @@ export const OrderSummaryCard = (): JSX.Element => {
     >
       <CartLineList />
 
-      {!isEmpty && <Divider style={{ marginBlock: 16 }} />}
+      {!isEmpty && <Divider className={styles.divider} />}
 
       <CheckoutForm />
     </Card>

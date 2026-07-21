@@ -34,7 +34,7 @@ export const SalesHistoryPage = (): JSX.Element => {
   return (
     <>
       <PageHeader
-        title="Purchase history"
+        title="Sales history"
         description="Every transaction recorded by your team."
         extra={
           <Button

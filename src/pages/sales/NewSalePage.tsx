@@ -32,9 +32,9 @@ export const NewSalePage = (): JSX.Element => {
   useHotkey('F2', () => setScanOpen(true), { enabled: !scanOpen });
 
   return (
-    <>
+    <div className={styles.page}>
       <PageHeader
-        title="New purchase"
+        title="New Transaction"
         description="Add items to the cart, then take payment."
         extra={
           <Button icon={<BarcodeOutlined />} onClick={() => setScanOpen(true)}>
@@ -44,15 +44,13 @@ export const NewSalePage = (): JSX.Element => {
         }
       />
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={14}>
+      <Row gutter={[16, 16]} align="stretch" className={styles.columns}>
+        <Col xs={24} lg={14} className={styles.column}>
           <ProductPickerCard />
         </Col>
 
-        <Col xs={24} lg={10}>
-          <div className={styles.summaryColumn}>
-            <OrderSummaryCard />
-          </div>
+        <Col xs={24} lg={10} className={styles.column}>
+          <OrderSummaryCard />
         </Col>
       </Row>
 
@@ -72,6 +70,6 @@ export const NewSalePage = (): JSX.Element => {
       )}
 
       <ScanProductModal />
-    </>
+    </div>
   );
 };

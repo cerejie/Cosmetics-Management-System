@@ -1,9 +1,22 @@
 import { style } from '@vanilla-extract/css';
 import { vars } from '@/styles/theme.css';
+import { SINGLE_SCREEN } from '@/styles/breakpoints';
 
+/**
+ * The receipt is capped on desktop and scrolls on its own, so a long cart never
+ * pushes the customer and payment fields out of the card.
+ */
 export const list = style({
   display: 'flex',
   flexDirection: 'column',
+  flexShrink: 0,
+  '@media': {
+    [SINGLE_SCREEN]: {
+      maxHeight: '30vh',
+      overflowY: 'auto',
+      scrollbarWidth: 'thin',
+    },
+  },
 });
 
 export const line = style({
@@ -11,7 +24,7 @@ export const line = style({
   alignItems: 'center',
   gap: vars.space.sm2,
   flexWrap: 'wrap',
-  paddingBlock: vars.space.sm2,
+  paddingBlock: vars.space.sm,
   selectors: {
     '&:not(:last-child)': { borderBottom: `1px solid ${vars.color.borderSubtle}` },
   },

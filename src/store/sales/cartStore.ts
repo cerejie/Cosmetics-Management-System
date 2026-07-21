@@ -94,5 +94,7 @@ export const useCartStore = create<CartState>((set) => ({
   removeLine: (productId) =>
     set((state) => ({ lines: state.lines.filter((line) => line.productId !== productId) })),
 
-  clear: () => set({ lines: [], pickerSearch: '' }),
+  // Closing the discount dialog matters: an empty cart disables the checkout
+  // form, and the dialog's own buttons inherit that.
+  clear: () => set({ lines: [], pickerSearch: '', advancedOpen: false }),
 }));

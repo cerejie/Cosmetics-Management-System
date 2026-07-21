@@ -13,6 +13,7 @@ import { NewSalePage } from '@/pages/sales/NewSalePage';
 import { SalesHistoryPage } from '@/pages/sales/SalesHistoryPage';
 import { UsersPage } from '@/pages/users/UsersPage';
 import { NotFoundPage } from '@/pages/common/NotFoundPage';
+import { ComingSoonPage } from '@/pages/common/ComingSoonPage';
 import { ROUTE_PATHS } from '@/config/routes';
 
 export const AppRoutes = (): JSX.Element => (
@@ -29,9 +30,94 @@ export const AppRoutes = (): JSX.Element => (
 
         <Route path={ROUTE_PATHS.inventory.products} element={<ProductsPage />} />
         <Route path={ROUTE_PATHS.inventory.movements} element={<StockMovementsPage />} />
+        <Route
+          path={ROUTE_PATHS.inventory.lowStock}
+          element={
+            <ComingSoonPage
+              title="Low stock"
+              description="Products at or below their reorder point."
+            />
+          }
+        />
 
         <Route element={<RequireAdmin />}>
           <Route path={ROUTE_PATHS.inventory.categories} element={<CategoriesPage />} />
+
+          <Route
+            path={ROUTE_PATHS.sales.analytics}
+            element={
+              <ComingSoonPage
+                title="Sales analytics"
+                description="Trends, best sellers and sales performance over time."
+              />
+            }
+          />
+
+          <Route
+            path={ROUTE_PATHS.purchasing.newPurchase}
+            element={
+              <ComingSoonPage
+                title="New purchase"
+                description="Record stock bought from a supplier."
+              />
+            }
+          />
+          <Route
+            path={ROUTE_PATHS.purchasing.list}
+            element={
+              <ComingSoonPage
+                title="Purchase history"
+                description="Past purchase orders and supplier deliveries."
+              />
+            }
+          />
+          <Route
+            path={ROUTE_PATHS.purchasing.reorderPrediction}
+            element={
+              <ComingSoonPage
+                title="Reorder prediction"
+                description="Suggested reorder quantities based on sales velocity."
+              />
+            }
+          />
+
+          <Route
+            path={ROUTE_PATHS.reports.sales}
+            element={
+              <ComingSoonPage title="Sales report" description="Sales broken down by period." />
+            }
+          />
+          <Route
+            path={ROUTE_PATHS.reports.revenue}
+            element={
+              <ComingSoonPage title="Revenue report" description="Revenue by period and channel." />
+            }
+          />
+          <Route
+            path={ROUTE_PATHS.reports.inventory}
+            element={
+              <ComingSoonPage
+                title="Inventory report"
+                description="Stock on hand and inventory valuation."
+              />
+            }
+          />
+          <Route
+            path={ROUTE_PATHS.reports.profitLoss}
+            element={
+              <ComingSoonPage
+                title="Profit & loss"
+                description="Margins after cost of goods sold."
+              />
+            }
+          />
+
+          <Route
+            path={ROUTE_PATHS.settings}
+            element={
+              <ComingSoonPage title="Settings" description="Business and application settings." />
+            }
+          />
         </Route>
 
         <Route element={<RequireUserManager />}>

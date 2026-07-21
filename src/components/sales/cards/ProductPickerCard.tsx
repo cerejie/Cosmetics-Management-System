@@ -35,12 +35,18 @@ const SORT_OPTIONS: readonly SelectOption<ProductSort>[] = [
 ];
 
 const PAGINATION: TablePaginationConfig = {
-  defaultPageSize: 12,
+  defaultPageSize: 25,
   showSizeChanger: true,
-  pageSizeOptions: [12, 24, 48],
+  pageSizeOptions: [25, 50, 100],
   size: 'small',
-  hideOnSinglePage: false,
+  hideOnSinglePage: true,
 };
+
+/**
+ * The fallback cap for the scrolling body. Desktop replaces it with the space
+ * left in the card; below `lg` it keeps the page short.
+ */
+const TABLE_SCROLL_FILL = { ...TABLE_SCROLL, y: 360 } as const;
 
 export const ProductPickerCard = (): JSX.Element => {
   const products = useProductStore((state) => state.products);
@@ -147,43 +153,57 @@ export const ProductPickerCard = (): JSX.Element => {
   ];
 
   return (
-    <Card variant="outlined">
-      <div className={styles.body}>
-        <div className={styles.toolbar}>
-          <Input
-            allowClear
-            prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
-            placeholder="Search by name, SKU or brand"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            aria-label="Search products"
-          />
+    <Card
+      variant="outlined"
+      className={styles.card}
+      classNames={{ body: styles.cardBody }}
+      styles={{ body: { padding: 16 } }}
+    >
+      <div className={styles.toolbar}>
+        <Input
+          allowClear
+          className={styles.search}
+          prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+          placeholder="Search by name, SKU or brand"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          aria-label="Search products"
+        />
 
-          <Popover
-            trigger="click"
-            placement="bottomRight"
-            title="Filters"
-            content={
-              <div className={styles.filterPanel}>
-                <div className={styles.filterRow}>
-                  <Typography.Text>Low stock only</Typography.Text>
-                  <Switch
-                    size="small"
-                    checked={lowStockOnly}
-                    onChange={setLowStockOnly}
-                    aria-label="Show low stock products only"
-                  />
-                </div>
-                <Button size="small" onClick={resetFilters} block>
-                  Reset filters
-                </Button>
+        <Select<ProductSort>
+          value={sort}
+          onChange={setSort}
+          options={[...SORT_OPTIONS]}
+          className={styles.sort}
+          aria-label="Sort products"
+        />
+
+        <Popover
+          trigger="click"
+          placement="bottomRight"
+          title="Filters"
+          content={
+            <div className={styles.filterPanel}>
+              <div className={styles.filterRow}>
+                <Typography.Text>Low stock only</Typography.Text>
+                <Switch
+                  size="small"
+                  checked={lowStockOnly}
+                  onChange={setLowStockOnly}
+                  aria-label="Show low stock products only"
+                />
               </div>
-            }
-          >
-            <Button icon={<ControlOutlined />} aria-label="Filter products" />
-          </Popover>
-        </div>
+              <Button size="small" onClick={resetFilters} block>
+                Reset filters
+              </Button>
+            </div>
+          }
+        >
+          <Button icon={<ControlOutlined />} aria-label="Filter products" />
+        </Popover>
+      </div>
 
+      <div className={styles.filterBar}>
         <div className={styles.chips}>
           <Button
             shape="round"
@@ -211,30 +231,18 @@ export const ProductPickerCard = (): JSX.Element => {
           ))}
         </div>
 
-        <div className={styles.metaRow}>
-          <span className={styles.metaLabel}>Products ({sellable.length})</span>
+        <span className={styles.count}>{sellable.length} products</span>
+      </div>
 
-          <Space size="small">
-            <Typography.Text type="secondary">Sort by</Typography.Text>
-            <Select<ProductSort>
-              value={sort}
-              onChange={setSort}
-              options={[...SORT_OPTIONS]}
-              size="small"
-              style={{ minWidth: 150 }}
-              aria-label="Sort products"
-            />
-          </Space>
-        </div>
-
+      <div className={styles.tableArea}>
         <Table<Product>
           rowKey="id"
           columns={columns}
           dataSource={sellable as Product[]}
           loading={status === 'loading'}
           pagination={PAGINATION}
-          scroll={TABLE_SCROLL}
-          size="middle"
+          scroll={TABLE_SCROLL_FILL}
+          size="small"
           locale={{
             emptyText: (
               <EmptyState
