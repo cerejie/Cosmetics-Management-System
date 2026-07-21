@@ -3,7 +3,7 @@ import * as productsService from '@/services/inventory/products.service';
 import { getErrorMessage } from '@/api/common/apiError';
 import type { AsyncStatus } from '@/types/common/api.types';
 import type { Product } from '@/types/inventory/inventory.types';
-import type { CreateProductValues, ProductFormValues } from '@/schemas/inventory/product.schema';
+import type { ProductFormValues } from '@/schemas/inventory/product.schema';
 import type { StockAdjustmentValues } from '@/schemas/inventory/stockAdjustment.schema';
 
 interface ProductState {
@@ -29,8 +29,8 @@ interface ProductState {
   readonly closeForm: () => void;
   readonly openStockAdjustment: (product: Product) => void;
   readonly closeStockAdjustment: () => void;
-  readonly createProduct: (values: CreateProductValues) => Promise<void>;
-  readonly updateProduct: (id: string, values: ProductFormValues) => Promise<void>;
+  /** `id` null creates, otherwise updates. */
+  readonly saveProduct: (id: string | null, values: ProductFormValues) => Promise<void>;
   readonly deleteProduct: (id: string) => Promise<void>;
   readonly adjustStock: (productId: string, values: StockAdjustmentValues) => Promise<void>;
 }
@@ -68,21 +68,10 @@ export const useProductStore = create<ProductState>((set, get) => ({
   openStockAdjustment: (product) => set({ adjustingProduct: product }),
   closeStockAdjustment: () => set({ adjustingProduct: null }),
 
-  createProduct: async (values) => {
+  saveProduct: async (id, values) => {
     set({ saving: true });
     try {
-      await productsService.createProduct(values);
-      await get().loadProducts();
-      set({ formOpen: false, editingProduct: null });
-    } finally {
-      set({ saving: false });
-    }
-  },
-
-  updateProduct: async (id, values) => {
-    set({ saving: true });
-    try {
-      await productsService.updateProduct(id, values);
+      await productsService.saveProduct(id, values);
       await get().loadProducts();
       set({ formOpen: false, editingProduct: null });
     } finally {

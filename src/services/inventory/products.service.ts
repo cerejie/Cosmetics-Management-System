@@ -1,32 +1,30 @@
 import * as productsApi from '@/api/inventory/products.api';
 import { toProduct, type Product } from '@/types/inventory/inventory.types';
-import type { ProductFormValues, CreateProductValues } from '@/schemas/inventory/product.schema';
+import type { ProductFormValues } from '@/schemas/inventory/product.schema';
 import type { StockAdjustmentValues } from '@/schemas/inventory/stockAdjustment.schema';
-
-const toPayload = (values: ProductFormValues) => ({
-  sku: values.sku.trim().toUpperCase(),
-  name: values.name.trim(),
-  brand: values.brand.trim(),
-  category_id: values.categoryId,
-  cost_price: values.costPrice,
-  unit_price: values.unitPrice,
-  reorder_level: values.reorderLevel,
-  is_active: values.isActive,
-});
 
 export const listProducts = async (): Promise<readonly Product[]> =>
   (await productsApi.fetchProducts()).map(toProduct);
 
-export const createProduct = async (values: CreateProductValues): Promise<Product> =>
-  toProduct(
-    await productsApi.createProduct({
-      ...toPayload(values),
-      stock_quantity: values.stockQuantity,
-    }),
-  );
-
-export const updateProduct = async (id: string, values: ProductFormValues): Promise<Product> =>
-  toProduct(await productsApi.updateProduct(id, toPayload(values)));
+/** `id` null creates, otherwise updates. */
+export const saveProduct = async (
+  id: string | null,
+  values: ProductFormValues,
+): Promise<void> => {
+  await productsApi.saveProduct({
+    id,
+    sku: values.sku.trim().toUpperCase(),
+    name: values.name.trim(),
+    brand: values.brand.trim(),
+    categoryId: values.categoryId,
+    costPrice: values.costPrice,
+    unitPrice: values.unitPrice,
+    stockQuantity: values.stockQuantity,
+    reorderLevel: values.reorderLevel,
+    isActive: values.isActive,
+    stockReason: values.stockReason.trim(),
+  });
+};
 
 export const deleteProduct = (id: string): Promise<void> => productsApi.deleteProduct(id);
 

@@ -1,5 +1,5 @@
 import { Alert, Button, Form, Input } from 'antd';
-import { LockOutlined, MailOutlined } from '@ant-design/icons';
+import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth/authStore';
 import { loginSchema, type LoginValues } from '@/schemas/auth/login.schema';
@@ -38,8 +38,19 @@ export const LoginForm = (): JSX.Element => {
         </Form.Item>
       )}
 
-      <Form.Item name="email" label="Email" rules={[...rules.email]}>
-        <Input prefix={<MailOutlined />} placeholder="you@example.com" autoComplete="email" />
+      <Form.Item
+        name="identifier"
+        label="Username"
+        rules={[...rules.identifier]}
+        extra="Accounts created in the dashboard sign in with their email address."
+      >
+        <Input
+          prefix={<UserOutlined />}
+          placeholder="your username"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+        />
       </Form.Item>
 
       <Form.Item name="password" label="Password" rules={[...rules.password]}>

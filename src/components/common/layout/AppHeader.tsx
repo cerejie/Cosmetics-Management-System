@@ -4,13 +4,20 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth/authStore';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { useAsyncAction } from '@/hooks/common/useAsyncAction';
+import { ROLE_LABELS, type AppRole } from '@/types/auth/auth.types';
 import { ROUTE_PATHS } from '@/config/routes';
 import * as styles from './AppLayout.css';
 
 const { Header } = Layout;
 
+const ROLE_COLORS: Readonly<Record<AppRole, string>> = {
+  superadmin: 'purple',
+  admin: 'magenta',
+  employee: 'default',
+};
+
 export const AppHeader = (): JSX.Element => {
-  const { profile, isAdmin } = useAuth();
+  const { user, role } = useAuth();
   const signOut = useAuthStore((state) => state.signOut);
   const navigate = useNavigate();
   const runAction = useAsyncAction();
@@ -23,7 +30,7 @@ export const AppHeader = (): JSX.Element => {
   return (
     <Header className={styles.header}>
       <Typography.Text type="secondary">
-        {profile ? `Signed in as ${profile.fullName || 'team member'}` : ''}
+        {user ? `Signed in as ${user.fullName || user.email}` : ''}
       </Typography.Text>
 
       <Dropdown
@@ -35,7 +42,7 @@ export const AppHeader = (): JSX.Element => {
       >
         <Space style={{ cursor: 'pointer' }}>
           <Avatar icon={<UserOutlined />} />
-          <Tag color={isAdmin ? 'magenta' : 'default'}>{isAdmin ? 'Admin' : 'Staff'}</Tag>
+          {role && <Tag color={ROLE_COLORS[role]}>{ROLE_LABELS[role]}</Tag>}
         </Space>
       </Dropdown>
     </Header>

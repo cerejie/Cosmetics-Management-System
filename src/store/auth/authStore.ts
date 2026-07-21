@@ -2,10 +2,10 @@ import { create } from 'zustand';
 import * as authService from '@/services/auth/auth.service';
 import { getErrorMessage } from '@/api/common/apiError';
 import type { AsyncStatus } from '@/types/common/api.types';
-import type { Credentials, Profile } from '@/types/auth/auth.types';
+import type { AppUser, Credentials } from '@/types/auth/auth.types';
 
 interface AuthState {
-  readonly profile: Profile | null;
+  readonly user: AppUser | null;
   readonly status: AsyncStatus;
   readonly signingIn: boolean;
   readonly error: string | null;
@@ -15,7 +15,7 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  profile: null,
+  user: null,
   status: 'idle',
   signingIn: false,
   error: null,
@@ -23,9 +23,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   initialise: async () => {
     set({ status: 'loading' });
     try {
-      set({ profile: await authService.getCurrentProfile(), status: 'success', error: null });
+      set({ user: await authService.getCurrentUser(), status: 'success', error: null });
     } catch (error) {
-      set({ profile: null, status: 'error', error: getErrorMessage(error) });
+      set({ user: null, status: 'error', error: getErrorMessage(error) });
     }
   },
 
@@ -33,15 +33,15 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ signingIn: true, error: null });
     try {
       await authService.signIn(credentials);
-      const profile = await authService.getCurrentProfile();
+      const user = await authService.getCurrentUser();
 
-      if (!profile) {
+      if (!user) {
         // Credentials were valid but the account is deactivated.
         await authService.signOut();
         throw new Error('Your account is not active. Contact an administrator.');
       }
 
-      set({ profile, status: 'success' });
+      set({ user, status: 'success' });
     } catch (error) {
       set({ error: getErrorMessage(error, 'Unable to sign in.') });
       throw error;
@@ -52,8 +52,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signOut: async () => {
     await authService.signOut();
-    set({ profile: null, status: 'success', error: null });
+    set({ user: null, status: 'success', error: null });
   },
 }));
-
-export const selectIsAdmin = (state: AuthState): boolean => state.profile?.role === 'admin';

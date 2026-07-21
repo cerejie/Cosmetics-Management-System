@@ -6,7 +6,7 @@ import type { PaymentMethod, SaleRowWithRelations } from '@/types/sales/sales.ty
 const SALE_SELECT = `
   *,
   sale_items ( * ),
-  created_by_profile:profiles!sales_created_by_fkey ( full_name )
+  created_by_user:users!sales_created_by_fkey ( full_name )
 `;
 
 export const fetchSales = async (limit = 200): Promise<readonly SaleRowWithRelations[]> => {
@@ -34,25 +34,26 @@ export interface CreateSalePayload {
  * the client never sends prices or totals.
  */
 export const createSale = async (payload: CreateSalePayload): Promise<SaleRow> => {
-  const { data, error } = await supabase
-    .rpc('create_sale', {
-      p_items: payload.items,
-      p_customer_name: payload.customerName,
-      p_payment_method: payload.paymentMethod,
-      p_discount_amount: payload.discountAmount,
-      p_note: payload.note,
-    })
-    .single<SaleRow>();
+  // Returns a single composite (`returns public.sales`), so PostgREST responds
+  // with a bare object — .single() would be wrong here.
+  const { data, error } = await supabase.rpc('create_sale', {
+    p_items: payload.items,
+    p_customer_name: payload.customerName,
+    p_payment_method: payload.paymentMethod,
+    p_discount_amount: payload.discountAmount,
+    p_note: payload.note,
+  });
 
   if (error) throw toApiError(error, 'Unable to record the sale.');
-  return data;
+  return data as SaleRow;
 };
 
 export const voidSale = async (saleId: string, reason: string): Promise<SaleRow> => {
-  const { data, error } = await supabase
-    .rpc('void_sale', { p_sale_id: saleId, p_reason: reason })
-    .single<SaleRow>();
+  const { data, error } = await supabase.rpc('void_sale', {
+    p_sale_id: saleId,
+    p_reason: reason,
+  });
 
   if (error) throw toApiError(error, 'Unable to void the sale.');
-  return data;
+  return data as SaleRow;
 };

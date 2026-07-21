@@ -1,7 +1,11 @@
 import { z } from 'zod';
 
 export const loginSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
+  /**
+   * A username, or an email for accounts created outside the app (such as the
+   * bootstrap superadmin). Anything containing '@' is treated as an email.
+   */
+  identifier: z.string().min(1, 'Username is required').max(120),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 

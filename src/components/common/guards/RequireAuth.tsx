@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/auth/authStore';
 import { ROUTE_PATHS } from '@/config/routes';
 
 export const RequireAuth = (): JSX.Element => {
-  const profile = useAuthStore((state) => state.profile);
+  const user = useAuthStore((state) => state.user);
   const status = useAuthStore((state) => state.status);
   const location = useLocation();
 
@@ -16,7 +16,7 @@ export const RequireAuth = (): JSX.Element => {
     );
   }
 
-  if (!profile) {
+  if (!user) {
     return <Navigate to={ROUTE_PATHS.login} replace state={{ from: location.pathname }} />;
   }
 

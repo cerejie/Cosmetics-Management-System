@@ -16,46 +16,44 @@ export const fetchProducts = async (): Promise<readonly ProductRowWithCategory[]
   return data ?? [];
 };
 
-export interface CreateProductPayload {
+export interface SaveProductPayload {
+  /** Omit or pass null to create. */
+  readonly id: string | null;
   readonly sku: string;
   readonly name: string;
   readonly brand: string;
-  readonly category_id: string | null;
-  readonly cost_price: number;
-  readonly unit_price: number;
-  readonly stock_quantity: number;
-  readonly reorder_level: number;
-  readonly is_active: boolean;
+  readonly categoryId: string | null;
+  readonly costPrice: number;
+  readonly unitPrice: number;
+  readonly stockQuantity: number;
+  readonly reorderLevel: number;
+  readonly isActive: boolean;
+  readonly stockReason: string;
 }
 
-export type UpdateProductPayload = Omit<CreateProductPayload, 'stock_quantity'>;
+/**
+ * Create and update both run through save_product: it locks the row, applies
+ * the change, and logs any stock delta as a movement in one transaction.
+ */
+export const saveProduct = async (payload: SaveProductPayload): Promise<ProductRow> => {
+  // These RPCs `returns public.products` (a single composite, not SETOF), so
+  // PostgREST already responds with a bare object — do not add .single().
+  const { data, error } = await supabase.rpc('save_product', {
+    p_id: payload.id,
+    p_sku: payload.sku,
+    p_name: payload.name,
+    p_brand: payload.brand,
+    p_category_id: payload.categoryId,
+    p_cost_price: payload.costPrice,
+    p_unit_price: payload.unitPrice,
+    p_stock_quantity: payload.stockQuantity,
+    p_reorder_level: payload.reorderLevel,
+    p_is_active: payload.isActive,
+    p_stock_reason: payload.stockReason,
+  });
 
-export const createProduct = async (
-  payload: CreateProductPayload,
-): Promise<ProductRowWithCategory> => {
-  const { data, error } = await supabase
-    .from('products')
-    .insert(payload)
-    .select(PRODUCT_SELECT)
-    .single<ProductRowWithCategory>();
-
-  if (error) throw toApiError(error, 'Unable to create the product.');
-  return data;
-};
-
-export const updateProduct = async (
-  id: string,
-  payload: UpdateProductPayload,
-): Promise<ProductRowWithCategory> => {
-  const { data, error } = await supabase
-    .from('products')
-    .update(payload)
-    .eq('id', id)
-    .select(PRODUCT_SELECT)
-    .single<ProductRowWithCategory>();
-
-  if (error) throw toApiError(error, 'Unable to update the product.');
-  return data;
+  if (error) throw toApiError(error, 'Unable to save the product.');
+  return data as ProductRow;
 };
 
 export const deleteProduct = async (id: string): Promise<void> => {
@@ -63,25 +61,20 @@ export const deleteProduct = async (id: string): Promise<void> => {
   if (error) throw toApiError(error, 'Unable to delete the product.');
 };
 
-/**
- * Stock changes always go through the RPC so the movement log and the product
- * row stay consistent under concurrency.
- */
+/** Dedicated +/- adjustment, used by the stock adjustment modal. */
 export const adjustStock = async (
   productId: string,
   signedQuantity: number,
   type: Extract<StockMovementType, 'purchase' | 'adjustment'>,
   reason: string,
 ): Promise<ProductRow> => {
-  const { data, error } = await supabase
-    .rpc('adjust_stock', {
-      p_product_id: productId,
-      p_quantity: signedQuantity,
-      p_type: type,
-      p_reason: reason,
-    })
-    .single<ProductRow>();
+  const { data, error } = await supabase.rpc('adjust_stock', {
+    p_product_id: productId,
+    p_quantity: signedQuantity,
+    p_type: type,
+    p_reason: reason,
+  });
 
   if (error) throw toApiError(error, 'Unable to adjust stock.');
-  return data;
+  return data as ProductRow;
 };

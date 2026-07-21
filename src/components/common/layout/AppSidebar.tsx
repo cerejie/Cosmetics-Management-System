@@ -8,6 +8,7 @@ import {
   FileTextOutlined,
   PlusCircleOutlined,
   SkinOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { MenuProps } from 'antd';
@@ -21,7 +22,7 @@ const { Sider } = Layout;
 export const AppSidebar = (): JSX.Element => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, canManageUsers } = useAuth();
   const collapsed = useLayoutStore((state) => state.sidebarCollapsed);
   const setCollapsed = useLayoutStore((state) => state.setSidebarCollapsed);
 
@@ -55,8 +56,11 @@ export const AppSidebar = (): JSX.Element => {
           { key: ROUTE_PATHS.inventory.movements, icon: <SwapOutlined />, label: 'Stock movements' },
         ],
       },
+      ...(canManageUsers
+        ? [{ key: ROUTE_PATHS.users, icon: <TeamOutlined />, label: 'Users' }]
+        : []),
     ],
-    [isAdmin],
+    [isAdmin, canManageUsers],
   );
 
   return (

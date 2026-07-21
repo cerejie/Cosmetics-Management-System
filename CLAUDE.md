@@ -47,31 +47,46 @@ Never skip a layer; components must not import from `api/`.
 
 ## Database
 
-Migrations live in `supabase/migrations/`. Apply `0001_init.sql` to a new project,
-then optionally `seed.sql`.
+Migrations live in `supabase/migrations/`. Apply them in order (`0001`, then
+`0002`) to a new project, then optionally `seed.sql`.
+
+The `create-user` Edge Function lives in `supabase/functions/` and must be
+deployed with `supabase functions deploy create-user`.
 
 **Security invariants — do not weaken these:**
 
-- Stock is only ever changed by the `adjust_stock`, `create_sale`, and
-  `void_sale` RPCs. They lock rows (`for update`) so concurrent sales cannot
-  oversell. Never write `products.stock_quantity` directly from the client.
+- Stock is only ever changed by the `save_product`, `adjust_stock`,
+  `create_sale`, and `void_sale` RPCs. They lock rows (`for update`) so
+  concurrent sales cannot oversell. Direct `insert`/`update` on `products` is
+  revoked from `authenticated` — never write `stock_quantity` from the client.
+- Editing quantity in the product form is allowed, and `save_product` logs the
+  delta to `stock_movements`. The audit trail must stay complete.
 - `create_sale` reads prices from the database. The client sends only
   `{product_id, quantity}` — never prices or totals.
-- `profiles.role` is not settable by the user. Sign-up always yields `staff`;
-  promotion goes through the admin-only `set_user_role` RPC. Column grants
+- `users.role` is not settable by the user. Sign-up never reads a role from
+  client-controlled metadata; changes go through `set_user_role`. Column grants
   (`grant update (full_name)`) enforce this, because RLS cannot restrict columns.
-- Client-side `RequireAdmin` is UX only; the database enforces the same rules.
+- Creating accounts needs the `service_role` key, so it lives **only** in the
+  `create-user` Edge Function. It must never appear in a `VITE_` variable.
+- Client-side guards are UX only; the database enforces the same rules.
 
 ### Roles
 
-- **admin** — manages products, categories, stock adjustments; can void sales.
-- **staff** — records sales, reads inventory.
+Hierarchical — each role may only manage the roles strictly below it.
 
-Promote the first admin manually after signing them up:
+| Role | Created by | Can do |
+| --- | --- | --- |
+| `superadmin` | the first sign-up | everything; creates admins and employees |
+| `admin` | superadmin | creates employees; full inventory; voids sales |
+| `employee` | admin | records sales; reads inventory |
 
-```sql
-update public.profiles set role = 'admin' where id = '<user-id>';
-```
+The **first account to sign up becomes the superadmin** (`handle_new_user`
+checks whether `public.users` is empty). Every later account defaults to
+`employee` and is provisioned through the Edge Function, which sets the role
+after authorising the caller.
+
+`is_admin()` means *admin or superadmin* and gates inventory management.
+`can_manage_role(target)` gates user management.
 
 ## Commands
 

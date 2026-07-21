@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/auth/useAuth';
 export const DashboardPage = (): JSX.Element => {
   const loadProducts = useProductStore((state) => state.loadProducts);
   const loadSales = useSalesStore((state) => state.loadSales);
-  const { profile } = useAuth();
+  const { user } = useAuth();
 
   useMountEffect(() => {
     void loadProducts();
@@ -22,7 +22,7 @@ export const DashboardPage = (): JSX.Element => {
   return (
     <>
       <PageHeader
-        title={`Welcome back${profile?.fullName ? `, ${profile.fullName.split(' ')[0]}` : ''}`}
+        title={`Welcome back${user?.fullName ? `, ${user.fullName.split(' ')[0]}` : ''}`}
         description="Today's performance and anything that needs your attention."
       />
 

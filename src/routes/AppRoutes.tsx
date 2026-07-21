@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import { AppLayout } from '@/components/common/layout/AppLayout';
 import { RequireAuth } from '@/components/common/guards/RequireAuth';
 import { RequireAdmin } from '@/components/common/guards/RequireAdmin';
+import { RequireUserManager } from '@/components/common/guards/RequireUserManager';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { DashboardPage } from '@/pages/dashboard/DashboardPage';
 import { ProductsPage } from '@/pages/inventory/ProductsPage';
@@ -9,6 +10,7 @@ import { CategoriesPage } from '@/pages/inventory/CategoriesPage';
 import { StockMovementsPage } from '@/pages/inventory/StockMovementsPage';
 import { NewSalePage } from '@/pages/sales/NewSalePage';
 import { SalesHistoryPage } from '@/pages/sales/SalesHistoryPage';
+import { UsersPage } from '@/pages/users/UsersPage';
 import { NotFoundPage } from '@/pages/common/NotFoundPage';
 import { ROUTE_PATHS } from '@/config/routes';
 
@@ -28,6 +30,10 @@ export const AppRoutes = (): JSX.Element => (
 
         <Route element={<RequireAdmin />}>
           <Route path={ROUTE_PATHS.inventory.categories} element={<CategoriesPage />} />
+        </Route>
+
+        <Route element={<RequireUserManager />}>
+          <Route path={ROUTE_PATHS.users} element={<UsersPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

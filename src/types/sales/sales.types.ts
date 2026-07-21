@@ -44,7 +44,7 @@ export interface CartLine {
 
 export type SaleRowWithRelations = SaleRow & {
   readonly sale_items: readonly SaleItemRow[] | null;
-  readonly created_by_profile: { readonly full_name: string } | null;
+  readonly created_by_user: { readonly full_name: string } | null;
 };
 
 export const toSaleItem = (row: SaleItemRow): SaleItem => ({
@@ -68,7 +68,7 @@ export const toSale = (row: SaleRowWithRelations): Sale => ({
   total: Number(row.total),
   note: row.note,
   createdAt: row.created_at,
-  createdByName: row.created_by_profile?.full_name || null,
+  createdByName: row.created_by_user?.full_name || null,
   items: (row.sale_items ?? []).map(toSaleItem),
 });
 

@@ -3,13 +3,15 @@
  * Regenerate with `supabase gen types typescript` once the CLI is wired up.
  */
 
-export type AppRole = 'admin' | 'staff';
+export type AppRole = 'superadmin' | 'admin' | 'employee';
 export type StockMovementType = 'purchase' | 'adjustment' | 'sale' | 'sale_reversal';
 export type SaleStatus = 'completed' | 'voided';
 export type PaymentMethod = 'cash' | 'card' | 'gcash' | 'bank_transfer';
 
-export interface ProfileRow {
+export interface UserRow {
   readonly id: string;
+  readonly username: string;
+  readonly email: string;
   readonly full_name: string;
   readonly role: AppRole;
   readonly is_active: boolean;

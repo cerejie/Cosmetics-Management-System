@@ -10,4 +10,5 @@ export const ROUTE_PATHS = {
     list: '/sales',
     newSale: '/sales/new',
   },
+  users: '/users',
 } as const;

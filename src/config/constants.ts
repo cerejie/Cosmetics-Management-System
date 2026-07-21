@@ -2,6 +2,17 @@ import type { SelectOption } from '@/types/common/api.types';
 import type { PaymentMethod } from '@/types/sales/sales.types';
 import type { StockMovementType } from '@/types/inventory/inventory.types';
 
+/**
+ * Accounts are identified by username. Supabase Auth needs an email, so one is
+ * derived deterministically and never delivered to. Must match
+ * INTERNAL_EMAIL_DOMAIN in supabase/functions/create-user/index.ts and
+ * username_to_email() in migration 0003.
+ */
+export const INTERNAL_EMAIL_DOMAIN = 'cosmetics.local';
+
+export const usernameToEmail = (username: string): string =>
+  `${username.trim().toLowerCase()}@${INTERNAL_EMAIL_DOMAIN}`;
+
 export const CURRENCY_CODE = 'PHP';
 export const CURRENCY_LOCALE = 'en-PH';
 

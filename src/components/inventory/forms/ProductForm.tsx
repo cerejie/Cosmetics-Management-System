@@ -1,21 +1,21 @@
 import { useEffect } from 'react';
-import { Col, Form, Input, InputNumber, Row, Select, Switch } from 'antd';
-import { createProductSchema, productSchema } from '@/schemas/inventory/product.schema';
-import type { CreateProductValues, ProductFormValues } from '@/schemas/inventory/product.schema';
+import { Alert, Col, Form, Input, InputNumber, Row, Select, Switch } from 'antd';
+import { productSchema, type ProductFormValues } from '@/schemas/inventory/product.schema';
 import { zodRules } from '@/utils/common/formRules';
+import { formatNumber } from '@/utils/common/format';
 import type { Category, Product } from '@/types/inventory/inventory.types';
 
-const rules = zodRules(createProductSchema.shape);
+const rules = zodRules(productSchema.shape);
 
 export const PRODUCT_FORM_ID = 'product-form';
 
 interface ProductFormProps {
   readonly product: Product | null;
   readonly categories: readonly Category[];
-  readonly onSubmit: (values: CreateProductValues | ProductFormValues) => void;
+  readonly onSubmit: (values: ProductFormValues) => void;
 }
 
-const toInitialValues = (product: Product | null): Partial<CreateProductValues> =>
+const toInitialValues = (product: Product | null): ProductFormValues =>
   product
     ? {
         sku: product.sku,
@@ -24,10 +24,14 @@ const toInitialValues = (product: Product | null): Partial<CreateProductValues> 
         categoryId: product.categoryId,
         costPrice: product.costPrice,
         unitPrice: product.unitPrice,
+        stockQuantity: product.stockQuantity,
         reorderLevel: product.reorderLevel,
         isActive: product.isActive,
+        stockReason: '',
       }
     : {
+        sku: '',
+        name: '',
         brand: '',
         categoryId: null,
         costPrice: 0,
@@ -35,10 +39,11 @@ const toInitialValues = (product: Product | null): Partial<CreateProductValues> 
         stockQuantity: 0,
         reorderLevel: 0,
         isActive: true,
+        stockReason: '',
       };
 
 export const ProductForm = ({ product, categories, onSubmit }: ProductFormProps): JSX.Element => {
-  const [form] = Form.useForm<CreateProductValues>();
+  const [form] = Form.useForm<ProductFormValues>();
   const isEditing = product !== null;
 
   useEffect(() => {
@@ -46,9 +51,11 @@ export const ProductForm = ({ product, categories, onSubmit }: ProductFormProps)
     form.setFieldsValue(toInitialValues(product));
   }, [form, product]);
 
-  const handleFinish = (values: CreateProductValues): void => {
-    const schema = isEditing ? productSchema : createProductSchema;
-    const result = schema.safeParse(values);
+  const quantity = Form.useWatch('stockQuantity', form);
+  const delta = product && typeof quantity === 'number' ? quantity - product.stockQuantity : 0;
+
+  const handleFinish = (values: ProductFormValues): void => {
+    const result = productSchema.safeParse(values);
     if (result.success) onSubmit(result.data);
   };
 
@@ -64,7 +71,7 @@ export const ProductForm = ({ product, categories, onSubmit }: ProductFormProps)
       <Row gutter={16}>
         <Col xs={24} sm={12}>
           <Form.Item name="sku" label="SKU" rules={[...rules.sku]}>
-            <Input placeholder="SKN-001" disabled={isEditing} />
+            <Input placeholder="SKN-001" />
           </Form.Item>
         </Col>
         <Col xs={24} sm={12}>
@@ -100,18 +107,16 @@ export const ProductForm = ({ product, categories, onSubmit }: ProductFormProps)
       </Row>
 
       <Row gutter={16}>
-        {!isEditing && (
-          <Col xs={24} sm={12}>
-            <Form.Item
-              name="stockQuantity"
-              label="Opening stock"
-              rules={[...rules.stockQuantity]}
-              tooltip="After creation, stock changes only through adjustments and sales."
-            >
-              <InputNumber min={0} precision={0} style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
-        )}
+        <Col xs={24} sm={12}>
+          <Form.Item
+            name="stockQuantity"
+            label="Quantity on hand"
+            rules={[...rules.stockQuantity]}
+            tooltip="Changing this records an entry in the stock movement log."
+          >
+            <InputNumber min={0} precision={0} style={{ width: '100%' }} />
+          </Form.Item>
+        </Col>
         <Col xs={24} sm={12}>
           <Form.Item
             name="reorderLevel"
@@ -123,6 +128,21 @@ export const ProductForm = ({ product, categories, onSubmit }: ProductFormProps)
           </Form.Item>
         </Col>
       </Row>
+
+      {isEditing && delta !== 0 && (
+        <>
+          <Alert
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+            message={`Stock will change by ${delta > 0 ? '+' : ''}${formatNumber(delta)}`}
+            description="This is logged as an adjustment so the movement history stays accurate."
+          />
+          <Form.Item name="stockReason" label="Reason for the stock change" rules={[...rules.stockReason]}>
+            <Input placeholder="Recount, delivery, damaged unit…" />
+          </Form.Item>
+        </>
+      )}
 
       <Form.Item name="isActive" label="Active" valuePropName="checked">
         <Switch />

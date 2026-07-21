@@ -3,8 +3,8 @@ import { Outlet } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth/useAuth';
 
 /**
- * Client-side gate for admin-only screens. The database enforces the same rule
- * through RLS and the RPC role checks — this only improves the UX.
+ * Client-side gate for admin-and-above screens. The database enforces the same
+ * rule through RLS and the role checks inside each RPC — this only improves UX.
  */
 export const RequireAdmin = (): JSX.Element => {
   const { isAdmin } = useAuth();
