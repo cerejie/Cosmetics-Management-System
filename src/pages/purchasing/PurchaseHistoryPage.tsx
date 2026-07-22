@@ -5,6 +5,7 @@ import { PurchasingTabs } from '@/components/purchasing/layout/PurchasingTabs';
 import { PurchaseFilters } from '@/components/purchasing/inputs/PurchaseFilters';
 import { PurchaseHistoryTable } from '@/components/purchasing/tables/PurchaseHistoryTable';
 import { PurchaseDetailModal } from '@/components/purchasing/modals/PurchaseDetailModal';
+import { PurchaseEditModal } from '@/components/purchasing/modals/PurchaseEditModal';
 import { usePurchaseStore } from '@/store/purchasing/purchaseStore';
 import { useSupplierStore } from '@/store/purchasing/supplierStore';
 import { useProductStore } from '@/store/inventory/productStore';
@@ -12,6 +13,7 @@ import { useCategoryStore } from '@/store/inventory/categoryStore';
 import { useStoreProfileStore } from '@/store/settings/storeProfileStore';
 import { useFilteredPurchases } from '@/hooks/purchasing/usePurchases';
 import { useMountEffect } from '@/hooks/common/useMountEffect';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { printInvoice } from '@/utils/common/invoiceHtml';
 import { toPurchaseInvoice } from '@/utils/purchasing/purchaseInvoice';
 import type { Purchase } from '@/types/purchasing/purchasing.types';
@@ -21,12 +23,14 @@ export const PurchaseHistoryPage = (): JSX.Element => {
   const error = usePurchaseStore((state) => state.error);
   const loadPurchases = usePurchaseStore((state) => state.loadPurchases);
   const openDetail = usePurchaseStore((state) => state.openDetail);
+  const openEdit = usePurchaseStore((state) => state.openEdit);
   const suppliers = useSupplierStore((state) => state.suppliers);
   const loadSuppliers = useSupplierStore((state) => state.loadSuppliers);
   const loadProducts = useProductStore((state) => state.loadProducts);
   const loadCategories = useCategoryStore((state) => state.loadCategories);
   const profile = useStoreProfileStore((state) => state.profile);
   const ensureProfile = useStoreProfileStore((state) => state.ensureProfile);
+  const { isAdmin } = useAuth();
 
   useMountEffect(() => {
     void loadPurchases();
@@ -58,12 +62,15 @@ export const PurchaseHistoryPage = (): JSX.Element => {
         <PurchaseHistoryTable
           purchases={purchases}
           loading={loading}
+          canManage={isAdmin}
           onView={openDetail}
           onPrint={handlePrint}
+          onEdit={(purchase) => void openEdit(purchase)}
         />
       </Card>
 
       <PurchaseDetailModal />
+      <PurchaseEditModal />
     </>
   );
 };

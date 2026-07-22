@@ -168,6 +168,21 @@ export interface PurchaseItemRow {
   readonly line_total: number;
 }
 
+/** One field corrected on a purchase. Values are rendered as typed. */
+export interface PurchaseChangeRow {
+  readonly field: string;
+  readonly from: string | null;
+  readonly to: string | null;
+}
+
+export interface PurchaseEditRow {
+  readonly id: string;
+  readonly purchase_id: string;
+  readonly changed_by: string | null;
+  readonly changed_at: string;
+  readonly changes: readonly PurchaseChangeRow[];
+}
+
 export interface PurchaseReturnRow {
   readonly id: string;
   readonly reference: string;

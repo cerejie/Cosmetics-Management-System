@@ -2,7 +2,12 @@ import { create } from 'zustand';
 import * as productsService from '@/services/inventory/products.service';
 import { getErrorMessage } from '@/api/common/apiError';
 import type { AsyncStatus } from '@/types/common/api.types';
-import type { Product, ProductRemoval } from '@/types/inventory/inventory.types';
+import type {
+  ForceDeleteResult,
+  Product,
+  ProductHistorySummary,
+  ProductRemoval,
+} from '@/types/inventory/inventory.types';
 import type { ProductFormValues } from '@/schemas/inventory/product.schema';
 
 interface ProductState {
@@ -41,7 +46,27 @@ interface ProductState {
   readonly createProduct: (values: ProductFormValues) => Promise<Product>;
   /** Resolves with what happened, so the page can say which one it was. */
   readonly deleteProduct: (id: string) => Promise<ProductRemoval>;
+
+  /**
+   * Force delete. The product being erased, the history it would take with it,
+   * and what the owner has typed into the confirmation box. Kept here rather
+   * than in the modal so the screen has no local state of its own.
+   */
+  readonly forceDeleteTarget: Product | null;
+  readonly forceDeleteHistory: ProductHistorySummary | null;
+  readonly forceDeleteLoadingHistory: boolean;
+  readonly forceDeleteConfirmation: string;
+  readonly forceDeleting: boolean;
+
+  /** Opens the dialog and reads what the product would take with it. */
+  readonly openForceDelete: (product: Product) => Promise<void>;
+  readonly closeForceDelete: () => void;
+  readonly setForceDeleteConfirmation: (value: string) => void;
+  readonly forceDeleteProduct: () => Promise<ForceDeleteResult>;
 }
+
+/** What the owner has to type before the button will do anything. */
+export const FORCE_DELETE_PHRASE = 'confirm';
 
 export const useProductStore = create<ProductState>((set, get) => ({
   products: [],
@@ -120,5 +145,56 @@ export const useProductStore = create<ProductState>((set, get) => ({
     const removal = await productsService.deleteProduct(id);
     await get().loadProducts();
     return removal;
+  },
+
+  forceDeleteTarget: null,
+  forceDeleteHistory: null,
+  forceDeleteLoadingHistory: false,
+  forceDeleteConfirmation: '',
+  forceDeleting: false,
+
+  openForceDelete: async (product) => {
+    set({
+      forceDeleteTarget: product,
+      forceDeleteHistory: null,
+      forceDeleteConfirmation: '',
+      forceDeleteLoadingHistory: true,
+    });
+
+    try {
+      const history = await productsService.getProductHistory(product.id);
+      // The dialog may have been closed, or another product opened, while the
+      // counts were loading; only the current target's figures are wanted.
+      if (get().forceDeleteTarget?.id === product.id) set({ forceDeleteHistory: history });
+    } finally {
+      set({ forceDeleteLoadingHistory: false });
+    }
+  },
+
+  closeForceDelete: () =>
+    set({ forceDeleteTarget: null, forceDeleteHistory: null, forceDeleteConfirmation: '' }),
+
+  setForceDeleteConfirmation: (forceDeleteConfirmation) => set({ forceDeleteConfirmation }),
+
+  forceDeleteProduct: async () => {
+    const { forceDeleteTarget, forceDeleteConfirmation } = get();
+
+    if (!forceDeleteTarget) throw new Error('No product selected.');
+
+    // Repeated from the dialog: the button is disabled until the phrase matches,
+    // but the guard belongs with the action, not with the markup.
+    if (forceDeleteConfirmation.trim().toLowerCase() !== FORCE_DELETE_PHRASE) {
+      throw new Error(`Type "${FORCE_DELETE_PHRASE}" to confirm.`);
+    }
+
+    set({ forceDeleting: true });
+    try {
+      const erased = await productsService.forceDeleteProduct(forceDeleteTarget.id);
+      await get().loadProducts();
+      set({ forceDeleteTarget: null, forceDeleteHistory: null, forceDeleteConfirmation: '' });
+      return erased;
+    } finally {
+      set({ forceDeleting: false });
+    }
   },
 }));

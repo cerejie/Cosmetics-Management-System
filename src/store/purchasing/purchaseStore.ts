@@ -7,8 +7,12 @@ import type {
   Purchase,
   PurchaseDraftHeader,
   PurchaseDraftLine,
+  PurchaseEdit,
 } from '@/types/purchasing/purchasing.types';
-import type { PurchaseFormValues } from '@/schemas/purchasing/purchase.schema';
+import type {
+  PurchaseDetailsFormValues,
+  PurchaseFormValues,
+} from '@/schemas/purchasing/purchase.schema';
 
 let lineCounter = 0;
 
@@ -86,7 +90,26 @@ interface PurchaseState {
   readonly closeNewProduct: () => void;
 
   readonly createPurchase: (values: PurchaseFormValues) => Promise<string>;
+
+  /**
+   * The purchase open in the edit dialog, with its correction log. Both tabs of
+   * that dialog read from here, so opening it loads the log once.
+   */
+  readonly editPurchase: Purchase | null;
+  readonly editTab: PurchaseEditTab;
+  readonly edits: readonly PurchaseEdit[];
+  readonly editsLoading: boolean;
+  readonly savingDetails: boolean;
+
+  readonly openEdit: (purchase: Purchase) => Promise<void>;
+  readonly closeEdit: () => void;
+  readonly loadEditLog: (purchaseId: string) => Promise<void>;
+  readonly setEditTab: (tab: PurchaseEditTab) => void;
+  readonly updatePurchaseDetails: (values: PurchaseDetailsFormValues) => Promise<void>;
 }
+
+/** The two tabs of the edit dialog: the paperwork, and what has been changed. */
+export type PurchaseEditTab = 'details' | 'log';
 
 /**
  * The in-progress purchase is persisted to local storage, so a reload or a trip
@@ -185,6 +208,52 @@ export const usePurchaseStore = create<PurchaseState>()(
           return reference;
         } finally {
           set({ submitting: false });
+        }
+      },
+
+      editPurchase: null,
+      editTab: 'details',
+      edits: [],
+      editsLoading: false,
+      savingDetails: false,
+
+      openEdit: async (purchase) => {
+        set({ editPurchase: purchase, editTab: 'details', edits: [] });
+        await get().loadEditLog(purchase.id);
+      },
+
+      closeEdit: () => set({ editPurchase: null, edits: [] }),
+
+      loadEditLog: async (purchaseId) => {
+        set({ editsLoading: true });
+        try {
+          const edits = await purchasesService.listPurchaseEdits(purchaseId);
+          // The dialog may have been closed, or another purchase opened, while
+          // the log was loading.
+          if (get().editPurchase?.id === purchaseId) set({ edits });
+        } finally {
+          set({ editsLoading: false });
+        }
+      },
+
+      setEditTab: (editTab) => set({ editTab }),
+
+      updatePurchaseDetails: async (values) => {
+        const purchase = get().editPurchase;
+        if (!purchase) return;
+
+        set({ savingDetails: true });
+        try {
+          await purchasesService.updatePurchaseDetails(purchase.id, values);
+          await get().loadPurchases();
+
+          // The dialog stays open on the log tab, so the correction that was
+          // just made is visible rather than only asserted by a toast.
+          const updated = get().purchases.find((row) => row.id === purchase.id) ?? null;
+          set({ editPurchase: updated, editTab: 'log' });
+          await get().loadEditLog(purchase.id);
+        } finally {
+          set({ savingDetails: false });
         }
       },
     }),

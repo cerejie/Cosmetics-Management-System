@@ -123,6 +123,15 @@ Products are created **only** from the purchase screen (the picker's "Add a new
 product"), so a delivery can contain something not yet on file. The Products
 page has no New Product button; it edits and removes only.
 
+A recorded purchase can be corrected, but **only its paperwork** — invoice
+number, reference, payment method, terms, date and note — through
+`update_purchase_details`. The supplier, the lines, quantities, unit costs and
+discounts are not editable: they set stock levels and the weighted-average cost
+price, and neither can be honestly rewound once later purchases and sales have
+moved on. A wrong delivery is corrected with a purchase return. Every field that
+actually changes is appended to `purchase_edits`, which has no update or delete
+grant, and the edit dialog shows that log on its second tab.
+
 Returns are standalone: supplier + product + quantity + reason, not linked to a
 past purchase order.
 
@@ -169,7 +178,7 @@ session, so RLS is the only authorisation layer.
 
 ## Database
 
-Migrations live in `supabase/migrations/`. Apply them in order (`0001` … `0007`)
+Migrations live in `supabase/migrations/`. Apply them in order (`0001` … `0008`)
 to a new project, then optionally `seed.sql`. **Migration 0004 is not complete
 without its manual steps** — setting `app.settings.jwt_secret` and disabling
 Auth sign-ups; they are listed at the bottom of that file.
@@ -189,10 +198,19 @@ RLS policies need. Nothing else may be granted there.
   `adjust_stock` is revoked from `authenticated` (migration 0005); the product
   screen is a catalogue. Do not add an "add stock" path to it.
 - Every stock change writes a `stock_movements` row. The audit trail must stay
-  complete. This is why **products are never hard-deleted once they have
+  complete. This is why **ordinary removal never hard-deletes a product that has
   history**: `delete_product` (migration 0006) archives a product that appears
   in a sale, purchase, return or movement and only truly deletes an unused one.
-  Direct `delete` on `products` is revoked, so that RPC is the only path.
+  Direct `delete` on `products` is revoked, so the RPCs are the only path.
+- `force_delete_product` (migration 0008) is the one deliberate exception, for a
+  product that should never have existed. It erases the product **and its
+  history** — sale lines, purchase lines, returns, movements — and removes any
+  sale or purchase left with nothing on it. Documents that keep some lines keep
+  the totals they were printed with; rewriting a total on an invoice already
+  handed over would be worse than a document that no longer itemises to it.
+  Reports covering those periods change. It is admin-only, and the UI makes the
+  owner type `confirm` after showing the counts it is about to destroy. The
+  ordinary Delete button must keep calling `delete_product`.
 - A movement's "on hand before" is derived (`quantity_after - quantity`), never
   stored. Reports read opening and closing levels from the log itself, so a
   report of a past period stays correct however much has happened since.

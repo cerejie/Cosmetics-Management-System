@@ -1,5 +1,6 @@
 import type {
   DiscountTypeValue,
+  PurchaseEditRow,
   PurchaseItemRow,
   PurchaseReturnRow,
   PurchaseRow,
@@ -85,6 +86,46 @@ export interface Purchase {
   readonly items: readonly PurchaseItem[];
 }
 
+/** The paperwork fields an already-recorded purchase may be corrected on. */
+export const PURCHASE_EDITABLE_FIELDS = [
+  'purchase_date',
+  'invoice_number',
+  'reference_no',
+  'payment_method',
+  'payment_terms',
+  'note',
+] as const;
+
+export type PurchaseEditableField = (typeof PURCHASE_EDITABLE_FIELDS)[number];
+
+const PURCHASE_FIELD_LABELS: Readonly<Record<string, string>> = {
+  purchase_date: 'Date',
+  invoice_number: 'Invoice no.',
+  reference_no: 'Reference',
+  payment_method: 'Paid by',
+  payment_terms: 'Terms',
+  note: 'Notes',
+};
+
+/** Falls back to the raw column name, so an unlabelled field still reads. */
+export const purchaseFieldLabel = (field: string): string =>
+  PURCHASE_FIELD_LABELS[field] ?? field;
+
+export interface PurchaseChange {
+  readonly field: string;
+  readonly label: string;
+  readonly from: string;
+  readonly to: string;
+}
+
+/** One save on the Edit tab. Append-only — see `purchase_edits`. */
+export interface PurchaseEdit {
+  readonly id: string;
+  readonly changedAt: string;
+  readonly changedByName: string | null;
+  readonly changes: readonly PurchaseChange[];
+}
+
 export interface PurchaseReturn {
   readonly id: string;
   readonly reference: string;
@@ -131,6 +172,10 @@ export type PurchaseRowWithRelations = PurchaseRow & {
   readonly purchase_items: readonly PurchaseItemRow[] | null;
   readonly suppliers: { readonly name: string } | null;
   readonly created_by_user: { readonly full_name: string } | null;
+};
+
+export type PurchaseEditRowWithRelations = PurchaseEditRow & {
+  readonly changed_by_user: { readonly full_name: string } | null;
 };
 
 export type PurchaseReturnRowWithRelations = PurchaseReturnRow & {
@@ -183,6 +228,28 @@ export const toPurchase = (row: PurchaseRowWithRelations): Purchase => ({
   createdAt: row.created_at,
   createdByName: row.created_by_user?.full_name || null,
   items: (row.purchase_items ?? []).map(toPurchaseItem),
+});
+
+/**
+ * A payment method is stored as its key and shown by its label, so the log
+ * reads the way the form did. Everything else is already the typed text.
+ */
+const changeValue = (field: string, value: string | null): string => {
+  const raw = value ?? '';
+  if (raw === '') return '—';
+  return field === 'payment_method' ? paymentMethodLabel(raw) || raw : raw;
+};
+
+export const toPurchaseEdit = (row: PurchaseEditRowWithRelations): PurchaseEdit => ({
+  id: row.id,
+  changedAt: row.changed_at,
+  changedByName: row.changed_by_user?.full_name || null,
+  changes: (row.changes ?? []).map((change) => ({
+    field: change.field,
+    label: purchaseFieldLabel(change.field),
+    from: changeValue(change.field, change.from),
+    to: changeValue(change.field, change.to),
+  })),
 });
 
 export const toPurchaseReturn = (row: PurchaseReturnRowWithRelations): PurchaseReturn => ({

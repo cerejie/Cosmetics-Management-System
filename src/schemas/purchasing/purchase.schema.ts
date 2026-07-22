@@ -69,6 +69,25 @@ export const purchaseSchema = purchaseFields.refine(percentWithinRange, PERCENT_
 
 export type PurchaseFormValues = z.infer<typeof purchaseSchema>;
 
+/**
+ * Correcting a purchase already recorded. The supplier's paperwork only: the
+ * lines, quantities, costs and discounts decide stock levels and the average
+ * cost price, and are not editable after the fact — a delivery entered wrongly
+ * is corrected with a purchase return.
+ */
+export const purchaseDetailsFields = z.object({
+  purchaseDate: purchaseFields.shape.purchaseDate,
+  invoiceNumber: purchaseFields.shape.invoiceNumber,
+  referenceNo: purchaseFields.shape.referenceNo,
+  paymentMethod: purchaseFields.shape.paymentMethod,
+  paymentTerms: purchaseFields.shape.paymentTerms,
+  note: purchaseFields.shape.note,
+});
+
+export const purchaseDetailsSchema = purchaseDetailsFields;
+
+export type PurchaseDetailsFormValues = z.infer<typeof purchaseDetailsSchema>;
+
 export const purchaseReturnSchema = z.object({
   supplierId: z.string().uuid('Choose a supplier'),
   productId: z.string().uuid('Choose a product'),

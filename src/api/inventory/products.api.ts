@@ -1,7 +1,11 @@
 import { supabase } from '@/api/common/supabaseClient';
 import { toApiError } from '@/api/common/apiError';
 import type { ProductRow } from '@/types/common/database.types';
-import type { ProductRemoval, ProductRowWithCategory } from '@/types/inventory/inventory.types';
+import type {
+  ProductHistoryRow,
+  ProductRemoval,
+  ProductRowWithCategory,
+} from '@/types/inventory/inventory.types';
 
 const PRODUCT_SELECT = '*, categories ( id, name )';
 
@@ -63,4 +67,25 @@ export const deleteProduct = async (id: string): Promise<ProductRemoval> => {
 
   if (error) throw toApiError(error, 'Unable to remove the product.');
   return data === 'archived' ? 'archived' : 'deleted';
+};
+
+/** Counts of everything the product appears in, for the force-delete warning. */
+export const fetchProductHistory = async (id: string): Promise<ProductHistoryRow> => {
+  const { data, error } = await supabase.rpc('product_history_summary', { p_id: id });
+
+  if (error) throw toApiError(error, 'Unable to check this product’s history.');
+  return data as ProductHistoryRow;
+};
+
+/**
+ * Erases the product and every record it appears in — sale lines, purchase
+ * lines, returns and stock movements — and removes any sale or purchase that is
+ * left with nothing on it. Irreversible, and never reached by the ordinary
+ * Delete button; only by the typed confirmation.
+ */
+export const forceDeleteProduct = async (id: string): Promise<ProductHistoryRow> => {
+  const { data, error } = await supabase.rpc('force_delete_product', { p_id: id });
+
+  if (error) throw toApiError(error, 'Unable to delete the product.');
+  return data as ProductHistoryRow;
 };

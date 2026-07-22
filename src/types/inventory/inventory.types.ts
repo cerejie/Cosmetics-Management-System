@@ -88,6 +88,52 @@ export type StockLevel = 'out_of_stock' | 'low_stock' | 'in_stock';
  */
 export type ProductRemoval = 'deleted' | 'archived';
 
+/**
+ * How much history a product is carrying. Read before a force delete so the
+ * confirmation can state, in figures, what is about to be destroyed.
+ */
+export interface ProductHistorySummary {
+  readonly saleItems: number;
+  readonly purchaseItems: number;
+  readonly purchaseReturns: number;
+  readonly stockMovements: number;
+  readonly stockQuantity: number;
+}
+
+export const hasHistory = (summary: ProductHistorySummary): boolean =>
+  summary.saleItems + summary.purchaseItems + summary.purchaseReturns + summary.stockMovements > 0;
+
+/** What a force delete actually erased, for the confirmation message. */
+export interface ForceDeleteResult extends ProductHistorySummary {
+  readonly name: string;
+  readonly sku: string;
+}
+
+/** Payload of `product_history_summary` / `force_delete_product`. */
+export interface ProductHistoryRow {
+  readonly sale_items: number;
+  readonly purchase_items: number;
+  readonly purchase_returns: number;
+  readonly stock_movements: number;
+  readonly stock_quantity: number;
+  readonly name?: string;
+  readonly sku?: string;
+}
+
+export const toProductHistorySummary = (row: ProductHistoryRow): ProductHistorySummary => ({
+  saleItems: Number(row.sale_items),
+  purchaseItems: Number(row.purchase_items),
+  purchaseReturns: Number(row.purchase_returns),
+  stockMovements: Number(row.stock_movements),
+  stockQuantity: Number(row.stock_quantity),
+});
+
+export const toForceDeleteResult = (row: ProductHistoryRow): ForceDeleteResult => ({
+  ...toProductHistorySummary(row),
+  name: row.name ?? '',
+  sku: row.sku ?? '',
+});
+
 export const getStockLevel = (product: Product): StockLevel => {
   if (product.stockQuantity <= 0) return 'out_of_stock';
   if (product.stockQuantity <= product.reorderLevel) return 'low_stock';

@@ -1,5 +1,13 @@
 import * as productsApi from '@/api/inventory/products.api';
-import { toProduct, type Product, type ProductRemoval } from '@/types/inventory/inventory.types';
+import {
+  toForceDeleteResult,
+  toProduct,
+  toProductHistorySummary,
+  type ForceDeleteResult,
+  type Product,
+  type ProductHistorySummary,
+  type ProductRemoval,
+} from '@/types/inventory/inventory.types';
 import type { ProductFormValues } from '@/schemas/inventory/product.schema';
 
 export const listProducts = async (): Promise<readonly Product[]> =>
@@ -45,3 +53,10 @@ export const createProduct = async (values: ProductFormValues): Promise<Product>
 
 export const deleteProduct = (id: string): Promise<ProductRemoval> =>
   productsApi.deleteProduct(id);
+
+export const getProductHistory = async (id: string): Promise<ProductHistorySummary> =>
+  toProductHistorySummary(await productsApi.fetchProductHistory(id));
+
+/** Erases the product and everything it appears in. Cannot be undone. */
+export const forceDeleteProduct = async (id: string): Promise<ForceDeleteResult> =>
+  toForceDeleteResult(await productsApi.forceDeleteProduct(id));

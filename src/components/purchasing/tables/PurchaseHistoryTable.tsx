@@ -1,5 +1,5 @@
 import { Button, Space, Table, Tooltip, Typography } from 'antd';
-import { PrinterOutlined } from '@ant-design/icons';
+import { EditOutlined, PrinterOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { formatCurrency, formatDate, formatNumber } from '@/utils/common/format';
 import { EmptyState } from '@/components/common/feedback/EmptyState';
@@ -13,15 +13,20 @@ import type { Purchase } from '@/types/purchasing/purchasing.types';
 interface PurchaseHistoryTableProps {
   readonly purchases: readonly Purchase[];
   readonly loading: boolean;
+  /** Admins only: editing the paperwork is logged, but still an edit. */
+  readonly canManage: boolean;
   readonly onView: (purchase: Purchase) => void;
   readonly onPrint: (purchase: Purchase) => void;
+  readonly onEdit: (purchase: Purchase) => void;
 }
 
 export const PurchaseHistoryTable = ({
   purchases,
   loading,
+  canManage,
   onView,
   onPrint,
+  onEdit,
 }: PurchaseHistoryTableProps): JSX.Element => {
   const columns: ColumnsType<Purchase> = [
     {
@@ -89,7 +94,7 @@ export const PurchaseHistoryTable = ({
       title: '',
       key: 'actions',
       align: 'right',
-      width: 150,
+      width: canManage ? 190 : 150,
       render: (_, purchase) => (
         <Space size="small">
           <Tooltip title="Print invoice">
@@ -100,6 +105,16 @@ export const PurchaseHistoryTable = ({
               aria-label={`Print invoice ${purchase.reference}`}
             />
           </Tooltip>
+          {canManage && (
+            <Tooltip title="Update details">
+              <Button
+                type="text"
+                icon={<EditOutlined />}
+                onClick={() => onEdit(purchase)}
+                aria-label={`Update purchase ${purchase.reference}`}
+              />
+            </Tooltip>
+          )}
           <Button type="link" onClick={() => onView(purchase)}>
             View
           </Button>

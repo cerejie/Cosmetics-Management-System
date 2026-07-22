@@ -1,5 +1,5 @@
 import { Button, Popconfirm, Space, Table, Tag, Tooltip, Typography } from 'antd';
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, FireOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { getStockLevel, type Product, type StockLevel } from '@/types/inventory/inventory.types';
 import { formatCurrency, formatNumber } from '@/utils/common/format';
@@ -22,6 +22,8 @@ interface ProductTableProps {
   readonly canManage: boolean;
   readonly onEdit: (product: Product) => void;
   readonly onDelete: (product: Product) => void;
+  /** Opens the typed-confirmation dialog; it does not delete anything itself. */
+  readonly onForceDelete: (product: Product) => void;
 }
 
 export const ProductTable = ({
@@ -30,6 +32,7 @@ export const ProductTable = ({
   canManage,
   onEdit,
   onDelete,
+  onForceDelete,
 }: ProductTableProps): JSX.Element => {
   const columns: ColumnsType<Product> = [
     {
@@ -97,7 +100,7 @@ export const ProductTable = ({
       title: 'Actions',
       key: 'actions',
       align: 'right',
-      width: 110,
+      width: 150,
       render: (_, product) => (
         <Space size="small">
           <Tooltip title="Edit">
@@ -122,6 +125,15 @@ export const ProductTable = ({
               aria-label={`Delete ${product.name}`}
             />
           </Popconfirm>
+          <Tooltip title="Delete permanently">
+            <Button
+              type="text"
+              danger
+              icon={<FireOutlined />}
+              onClick={() => onForceDelete(product)}
+              aria-label={`Permanently delete ${product.name}`}
+            />
+          </Tooltip>
         </Space>
       ),
     });
