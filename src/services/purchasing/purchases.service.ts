@@ -16,12 +16,16 @@ const toItemPayload = (lines: readonly PurchaseDraftLine[]) =>
       productId: line.productId,
       quantity: line.quantity,
       unitCost: line.unitCost,
+      discountType: line.discountType,
+      discountValue: line.discountValue,
     });
 
     return {
       product_id: parsed.productId,
       quantity: parsed.quantity,
       unit_cost: parsed.unitCost,
+      discount_type: parsed.discountType,
+      discount_value: parsed.discountValue,
     };
   });
 
@@ -34,6 +38,12 @@ export const createPurchase = async (
     supplierId: values.supplierId,
     purchaseDate: values.purchaseDate,
     note: values.note.trim(),
+    invoiceNumber: values.invoiceNumber,
+    referenceNo: values.referenceNo,
+    paymentMethod: values.paymentMethod,
+    paymentTerms: values.paymentTerms,
+    discountType: values.discountType,
+    discountValue: values.discountValue,
     items: toItemPayload(lines),
   });
 

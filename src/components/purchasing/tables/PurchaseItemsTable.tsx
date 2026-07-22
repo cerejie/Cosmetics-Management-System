@@ -4,7 +4,8 @@ import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { usePurchaseStore } from '@/store/purchasing/purchaseStore';
 import { useProductStore } from '@/store/inventory/productStore';
-import { getLineTotal } from '@/utils/purchasing/purchaseTotals';
+import { DiscountInput } from '@/components/purchasing/inputs/DiscountInput';
+import { getLineDiscount, getLineTotal } from '@/utils/purchasing/purchaseTotals';
 import { formatCurrency } from '@/utils/common/format';
 import { TABLE_SCROLL } from '@/components/common/tables/tableDefaults';
 import type { PurchaseDraftLine } from '@/types/purchasing/purchasing.types';
@@ -31,13 +32,13 @@ export const PurchaseItemsTable = (): JSX.Element => {
     {
       title: 'Product',
       key: 'product',
-      width: 320,
+      width: 300,
       render: (_, line) => (
         <Select
           size="large"
           showSearch
           optionFilterProp="label"
-          placeholder="Choose a product"
+          placeholder="Search by name or SKU"
           style={{ width: '100%' }}
           value={line.productId}
           options={productOptions}
@@ -70,7 +71,7 @@ export const PurchaseItemsTable = (): JSX.Element => {
     {
       title: 'Quantity',
       key: 'quantity',
-      width: 130,
+      width: 120,
       render: (_, line) => (
         <InputNumber
           size="large"
@@ -86,7 +87,7 @@ export const PurchaseItemsTable = (): JSX.Element => {
     {
       title: 'Cost each',
       key: 'unitCost',
-      width: 150,
+      width: 140,
       render: (_, line) => (
         <InputNumber
           size="large"
@@ -101,15 +102,42 @@ export const PurchaseItemsTable = (): JSX.Element => {
       ),
     },
     {
+      title: 'Discount',
+      key: 'discount',
+      width: 170,
+      render: (_, line) => (
+        <DiscountInput
+          size="large"
+          type={line.discountType}
+          value={line.discountValue}
+          onChange={({ type, value }) =>
+            updateLine(line.key, { discountType: type, discountValue: value })
+          }
+          label="Line discount"
+        />
+      ),
+    },
+    {
       title: 'Total',
       key: 'lineTotal',
       align: 'right',
-      width: 130,
-      render: (_, line) => (
-        <Typography.Text strong style={{ fontSize: 15 }}>
-          {formatCurrency(getLineTotal(line))}
-        </Typography.Text>
-      ),
+      width: 140,
+      render: (_, line) => {
+        const discount = getLineDiscount(line);
+
+        return (
+          <Flex vertical align="end">
+            <Typography.Text strong style={{ fontSize: 15 }}>
+              {formatCurrency(getLineTotal(line))}
+            </Typography.Text>
+            {discount > 0 && (
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                less {formatCurrency(discount)}
+              </Typography.Text>
+            )}
+          </Flex>
+        );
+      },
     },
     {
       title: '',

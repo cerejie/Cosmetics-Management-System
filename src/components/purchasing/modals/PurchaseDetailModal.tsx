@@ -7,7 +7,7 @@ import { useStoreProfileStore } from '@/store/settings/storeProfileStore';
 import { formatCurrency, formatDate, formatNumber } from '@/utils/common/format';
 import { printInvoice } from '@/utils/common/invoiceHtml';
 import { toPurchaseInvoice } from '@/utils/purchasing/purchaseInvoice';
-import type { PurchaseItem } from '@/types/purchasing/purchasing.types';
+import { paymentMethodLabel, type PurchaseItem } from '@/types/purchasing/purchasing.types';
 
 const columns: ColumnsType<PurchaseItem> = [
   {
@@ -36,6 +36,14 @@ const columns: ColumnsType<PurchaseItem> = [
     key: 'unitCost',
     align: 'right',
     render: (unitCost: number) => formatCurrency(unitCost),
+  },
+  {
+    title: 'Discount',
+    dataIndex: 'discountAmount',
+    key: 'discountAmount',
+    align: 'right',
+    render: (discountAmount: number) =>
+      discountAmount > 0 ? formatCurrency(discountAmount) : '—',
   },
   {
     title: 'Total',
@@ -84,6 +92,20 @@ export const PurchaseDetailModal = (): JSX.Element => {
           <Descriptions size="small" column={{ xs: 1, sm: 2 }} style={{ marginBottom: 16 }}>
             <Descriptions.Item label="Supplier">{purchase.supplierName}</Descriptions.Item>
             <Descriptions.Item label="Date">{formatDate(purchase.purchaseDate)}</Descriptions.Item>
+            {purchase.invoiceNumber && (
+              <Descriptions.Item label="Invoice no.">{purchase.invoiceNumber}</Descriptions.Item>
+            )}
+            {purchase.referenceNo && (
+              <Descriptions.Item label="Reference">{purchase.referenceNo}</Descriptions.Item>
+            )}
+            {purchase.paymentMethod && (
+              <Descriptions.Item label="Paid by">
+                {paymentMethodLabel(purchase.paymentMethod)}
+              </Descriptions.Item>
+            )}
+            {purchase.paymentTerms && (
+              <Descriptions.Item label="Terms">{purchase.paymentTerms}</Descriptions.Item>
+            )}
             <Descriptions.Item label="Recorded by">
               {purchase.createdByName ?? '—'}
             </Descriptions.Item>
@@ -102,7 +124,17 @@ export const PurchaseDetailModal = (): JSX.Element => {
             pagination={false}
           />
 
-          <Flex justify="end" style={{ marginTop: 16 }}>
+          <Flex vertical align="end" gap={4} style={{ marginTop: 16 }}>
+            {purchase.discountAmount > 0 && (
+              <>
+                <Typography.Text type="secondary">
+                  Subtotal {formatCurrency(purchase.subtotal)}
+                </Typography.Text>
+                <Typography.Text type="secondary">
+                  Discount − {formatCurrency(purchase.discountAmount)}
+                </Typography.Text>
+              </>
+            )}
             <Typography.Text strong style={{ fontSize: 18 }}>
               Total {formatCurrency(purchase.total)}
             </Typography.Text>

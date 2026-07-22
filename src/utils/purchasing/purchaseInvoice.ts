@@ -3,14 +3,24 @@ import { invoiceFooter, invoiceTerms, toIssuerParty } from '@/utils/common/invoi
 import { formatDate } from '@/utils/common/format';
 import { describeRange, type DateRange } from '@/utils/reports/period';
 import type { InvoiceDocument, InvoiceParty } from '@/types/common/invoice.types';
+import { paymentMethodLabel } from '@/types/purchasing/purchasing.types';
 import type { Purchase, Supplier } from '@/types/purchasing/purchasing.types';
 import type { StoreProfile } from '@/types/settings/settings.types';
 
 /**
  * `supplier` is the full record when it is loaded, so the printed document
- * carries the supplier's TIN and terms; the purchase alone only knows a name.
+ * carries the supplier's TIN; the purchase alone only knows a name.
+ *
+ * `purchase` is passed when the document is about one delivery. Its terms and
+ * document numbers are read from the purchase rather than the supplier record,
+ * because they were snapshotted at the time: correcting a supplier's standing
+ * terms today must not change what an already-printed invoice says.
  */
-const toSupplierParty = (supplierName: string, supplier: Supplier | null): InvoiceParty => ({
+const toSupplierParty = (
+  supplierName: string,
+  supplier: Supplier | null,
+  purchase?: Purchase,
+): InvoiceParty => ({
   name: supplier?.name ?? supplierName,
   lines: [
     { value: supplier?.contactPerson ?? '' },
@@ -18,23 +28,36 @@ const toSupplierParty = (supplierName: string, supplier: Supplier | null): Invoi
     { value: supplier?.phone ?? '' },
     { value: supplier?.email ?? '' },
     { label: 'TIN', value: supplier?.tin ?? '' },
-    { label: 'Terms', value: supplier?.paymentTerms ?? '' },
+    { label: 'Terms', value: purchase?.paymentTerms || supplier?.paymentTerms || '' },
+    ...(purchase?.invoiceNumber
+      ? [{ label: 'Supplier invoice', value: purchase.invoiceNumber }]
+      : []),
+    ...(purchase?.referenceNo ? [{ label: 'Reference', value: purchase.referenceNo }] : []),
+    ...(purchase?.paymentMethod
+      ? [{ label: 'Paid by', value: paymentMethodLabel(purchase.paymentMethod) }]
+      : []),
   ],
 });
 
-/** The goods-received document for one delivery. */
+/**
+ * The goods-received document for one delivery.
+ *
+ * The reference is our own purchase order number. The supplier's invoice number
+ * is their document, so it is printed as a detail of the order rather than as
+ * the heading — two suppliers may well both have issued an "INV-001".
+ */
 export const toPurchaseInvoice = (
   purchase: Purchase,
   supplier: Supplier | null,
   profile: StoreProfile | null,
 ): InvoiceDocument => ({
   title: 'PURCHASE',
-  referenceLabel: 'Invoice Number',
+  referenceLabel: 'Purchase Order',
   reference: purchase.reference,
   date: formatDate(purchase.purchaseDate),
   issuer: toIssuerParty(profile),
   recipientLabel: 'Supplier:',
-  recipient: toSupplierParty(purchase.supplierName, supplier),
+  recipient: toSupplierParty(purchase.supplierName, supplier, purchase),
   unitPriceLabel: 'Rate',
   lines: purchase.items.map((item) => ({
     key: item.id,
@@ -46,8 +69,10 @@ export const toPurchaseInvoice = (
     amount: item.lineTotal,
   })),
   totals: [
-    { label: 'Subtotal', amount: purchase.total },
-    { label: 'Tax', amount: 0 },
+    { label: 'Subtotal', amount: purchase.subtotal },
+    ...(purchase.discountAmount > 0
+      ? [{ label: 'Discount', amount: purchase.discountAmount, negative: true }]
+      : []),
     { label: 'Total', amount: purchase.total, emphasis: true },
   ],
   note: purchase.note,

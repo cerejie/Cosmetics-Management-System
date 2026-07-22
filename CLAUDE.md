@@ -83,10 +83,41 @@ never silently changes the period being measured.
 
 ## Purchasing
 
-Deliberately small — the admin using it is not a systems person. A purchase is
-supplier + date + rows of (product, quantity, unit cost); saving it puts the
-goods into inventory straight away. There is no draft, no approval, no partial
-receiving, and no per-line discount or tax. Do not reintroduce them.
+Kept as small as the paperwork allows — the admin using it is not a systems
+person. A purchase is supplier + date + rows of (product, quantity, unit cost,
+discount); saving it puts the goods into inventory straight away.
+
+There is still no approval and no partial receiving. **There is no tax**: costs
+are recorded exactly as the supplier bills them, and no screen computes VAT.
+Do not reintroduce any of the three.
+
+A purchase also carries the supplier's own paperwork — their invoice number, a
+reference (delivery receipt) number, the payment method and the payment terms.
+The terms are a **snapshot** copied from the supplier at save time, for the same
+reason a sale snapshots its customer: correcting a supplier's standing terms
+must never change an invoice that is already printed. The supplier's invoice
+number is unique per supplier, so the same delivery cannot be entered twice.
+Every one of those fields is optional — a delivery often arrives before its
+paperwork, and refusing the stock until it turns up would be worse.
+
+Discounts are entered per line and on the order as a whole, each as either a
+peso amount or a percentage. The client sends only the type and the value;
+`create_purchase` derives every peso figure and clamps a discount to what it
+comes off, so a total can never go negative. `purchase_discount_amount` is the
+one place that arithmetic lives, and `utils/purchasing/purchaseTotals.ts`
+mirrors it for the on-screen preview — keep the two in step.
+
+A line's `line_total` is net of its own discount, so the lines still sum to
+`subtotal`; the order discount is applied once on top. For costing only, the
+order discount is spread across the lines in proportion to their value, so the
+weighted-average `cost_price` reflects what was actually paid.
+
+**Drafts are local.** The purchase being typed is persisted to local storage by
+`purchaseStore`, so a reload mid-delivery loses nothing, and "Save as draft"
+only stamps `draftSavedAt`. Nothing is uploaded: a draft has no effect on stock
+and belongs to the person typing it. Do not add a draft row to `purchases` — a
+`status` column would put a filter on every history query, report and supplier
+statement.
 
 Products are created **only** from the purchase screen (the picker's "Add a new
 product"), so a delivery can contain something not yet on file. The Products
@@ -138,7 +169,7 @@ session, so RLS is the only authorisation layer.
 
 ## Database
 
-Migrations live in `supabase/migrations/`. Apply them in order (`0001` … `0006`)
+Migrations live in `supabase/migrations/`. Apply them in order (`0001` … `0007`)
 to a new project, then optionally `seed.sql`. **Migration 0004 is not complete
 without its manual steps** — setting `app.settings.jwt_secret` and disabling
 Auth sign-ups; they are listed at the bottom of that file.
@@ -166,9 +197,10 @@ RLS policies need. Nothing else may be granted there.
   stored. Reports read opening and closing levels from the log itself, so a
   report of a past period stays correct however much has happened since.
 - `create_sale` reads prices from the database; `create_purchase` recomputes
-  every line total and `create_purchase_return` reads the cost from the product.
-  The client sends only quantities, unit costs and customer identity — never a
-  total it worked out itself.
+  every line total *and both discounts*, and `create_purchase_return` reads the
+  cost from the product. The client sends only quantities, unit costs, how each
+  discount is expressed, and customer identity — never a peso total it worked
+  out itself.
 - `users.role` is not settable by the user. `register` always creates a *pending
   employee* and never reads a role from its arguments; changes go through
   `set_user_role`. Column grants (`grant update (full_name)`) enforce this,

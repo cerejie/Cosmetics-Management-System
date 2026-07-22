@@ -132,11 +132,22 @@ export interface StoreProfileRow {
   readonly updated_at: string;
 }
 
+/** How a discount was entered: a flat peso amount or a percentage. */
+export type DiscountTypeValue = 'amount' | 'percent';
+
 export interface PurchaseRow {
   readonly id: string;
   readonly reference: string;
   readonly supplier_id: string;
   readonly purchase_date: string;
+  readonly invoice_number: string;
+  readonly reference_no: string;
+  readonly payment_method: string;
+  readonly payment_terms: string;
+  readonly subtotal: number;
+  readonly discount_type: DiscountTypeValue;
+  readonly discount_value: number;
+  readonly discount_amount: number;
   readonly total: number;
   readonly note: string;
   readonly created_by: string | null;
@@ -151,6 +162,9 @@ export interface PurchaseItemRow {
   readonly sku: string;
   readonly quantity: number;
   readonly unit_cost: number;
+  readonly discount_type: DiscountTypeValue;
+  readonly discount_value: number;
+  readonly discount_amount: number;
   readonly line_total: number;
 }
 

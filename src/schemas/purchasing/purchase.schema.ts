@@ -1,7 +1,34 @@
 import { z } from 'zod';
+import { PAYMENT_METHODS } from '@/types/purchasing/purchasing.types';
+
+/** A discount is either a flat peso amount or a percentage of what it is off. */
+export const discountTypeSchema = z.enum(['amount', 'percent']);
+
+/**
+ * Only bounded here. Whether a discount exceeds what it is taken off is decided
+ * by `create_purchase`, which clamps it; the percentage cap is repeated on the
+ * client only so an obvious typo is caught next to the field.
+ */
+const discountFields = {
+  discountType: discountTypeSchema.default('amount'),
+  discountValue: z
+    .number({ invalid_type_error: 'Discount must be a number' })
+    .min(0, 'Discount cannot be negative')
+    .default(0),
+};
+
+const percentWithinRange = (value: {
+  discountType: 'amount' | 'percent';
+  discountValue: number;
+}): boolean => value.discountType !== 'percent' || value.discountValue <= 100;
+
+const PERCENT_ERROR = {
+  message: 'A percentage cannot be more than 100',
+  path: ['discountValue'],
+};
 
 /** One line of a purchase. Line maths is redone by `create_purchase`. */
-export const purchaseLineSchema = z.object({
+export const purchaseLineFields = z.object({
   productId: z.string().uuid('Choose a product'),
   quantity: z
     .number({ invalid_type_error: 'Quantity is required' })
@@ -10,16 +37,35 @@ export const purchaseLineSchema = z.object({
   unitCost: z
     .number({ invalid_type_error: 'Cost is required' })
     .min(0, 'Cost cannot be negative'),
+  ...discountFields,
 });
+
+export const purchaseLineSchema = purchaseLineFields.refine(percentWithinRange, PERCENT_ERROR);
 
 export type PurchaseLineValues = z.infer<typeof purchaseLineSchema>;
 
-/** The purchase header. `purchaseDate` is an ISO `YYYY-MM-DD` date. */
-export const purchaseSchema = z.object({
+/**
+ * The purchase header. `purchaseDate` is an ISO `YYYY-MM-DD` date.
+ *
+ * The document numbers are all optional: a delivery often arrives before the
+ * paperwork, and refusing to record the stock until it turns up would be worse
+ * than recording it with a blank field.
+ *
+ * Exported unrefined as well, because `zodRules()` needs the field shape and a
+ * refined schema does not have one.
+ */
+export const purchaseFields = z.object({
   supplierId: z.string().uuid('Choose a supplier'),
   purchaseDate: z.string().min(1, 'Date is required'),
-  note: z.string().max(240).default(''),
+  invoiceNumber: z.string().trim().max(40, 'Invoice number is too long').default(''),
+  referenceNo: z.string().trim().max(40, 'Reference is too long').default(''),
+  paymentMethod: z.union([z.enum(PAYMENT_METHODS), z.literal('')]).default(''),
+  paymentTerms: z.string().trim().max(60, 'Payment terms are too long').default(''),
+  ...discountFields,
+  note: z.string().max(500, 'Notes are limited to 500 characters').default(''),
 });
+
+export const purchaseSchema = purchaseFields.refine(percentWithinRange, PERCENT_ERROR);
 
 export type PurchaseFormValues = z.infer<typeof purchaseSchema>;
 
